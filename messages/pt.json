@@ -1,0 +1,28 @@
+{
+  "HomePage": {
+    "title": "Olá Mundo!",
+    "about": "Go to the about page"
+  },
+  "Sidebar": {
+    "tag1": "Descubra",
+    "tag2": "Biblioteca",
+    "option1": "Início",
+    "option2": "Navegar",
+    "option3": "Favoritos",
+    "option4": "Playlist",
+    "option5": "Lançamentos",
+    "option6": "Feito para Você",
+    "option7": "Comunidade",
+    "upgrade": "Atualize seu plano para mais recursos!",
+    "buttonupgrade": "Atualizar Agora"
+  },
+  "NavBar": {
+    "btnPremium": "Comprar Premium",
+    "inputsearch": "O que você está procurando aqui?",
+    "btnlogout": "Sair"
+  },
+  "FeaturedMidia": {
+    "btwath": "Assistir agora",
+    "btaddwl": "Adicionar a lista"
+  }
+}

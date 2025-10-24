@@ -1,0 +1,28 @@
+{
+  "HomePage": {
+    "title": "Hello world!",
+    "about": "Go to the about page"
+  },
+  "Sidebar": {
+    "tag1": "Discover",
+    "tag2": "Library",
+    "option1": "Home",
+    "option2": "Browser",
+    "option3": "Favorites",
+    "option4": "Playlist",
+    "option5": "Releases",
+    "option6": "Made for You",
+    "option7": "Community",
+    "upgrade": "Upgrade your plan for more features!",
+    "buttonupgrade": "Upgrade Now"
+  },
+  "NavBar": {
+    "btnPremium": "Buy Premium",
+    "inputsearch": "What are you looking for here?",
+    "btnlogout": "Logout"
+  },
+  "FeaturedMidia": {
+    "btwath": "Watch Now",
+    "btaddwl": "Add to Watchlist"
+  }
+}
