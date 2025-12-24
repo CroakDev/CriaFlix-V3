@@ -147,3 +147,29 @@
   background: #f8fafc;
   border-radius: 15px;
 }
+
+@layer utilities {
+  .media-card-hover {
+    transition: all 0.3s cubic-bezier(0, 0.4, 0, 1);
+  }
+
+  .media-card-hover:hover {
+    transform: scale(1.1);
+    z-index: 50;
+  }
+
+  .media-card-content {
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+}
+
+@keyframes fadeZoomIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}

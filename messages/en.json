@@ -23,6 +23,7 @@
   },
   "FeaturedMidia": {
     "btwath": "Watch Now",
-    "btaddwl": "Add to Watchlist"
+    "btaddwl": "Add to Watchlist",
+    "btadded": "Added"
   }
 }

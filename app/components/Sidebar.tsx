@@ -129,8 +129,8 @@ export function SidebarMenu() {
             <ScrollArea className="h-full">
                 <Link href="/">
                     <div className="flex justify-center items-center py-6 mt-5">
-                        <Image className="w-8 h-8" src={Logo} alt="Logo" />
-                        <h1 className="text-2xl font-bold ml-2 flex items-center">CriaFlix</h1>
+                        <Image className="w-9 h-9" src={Logo} alt="Logo" />
+                        <h1 className="text-2xl font-bold ml-1 flex items-center">Cria <b className="text-primary font-bold">Flix</b></h1>
                     </div>
                 </Link>
                 <div className="md:px-4 sm:p-0 mt-5">

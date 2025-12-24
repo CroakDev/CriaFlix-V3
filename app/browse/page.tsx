@@ -1,216 +1,356 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Input } from "@/components/ui/input"
+import { useState, useEffect } from "react"
+import { Search, Filter, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
+import { useSession } from "next-auth/react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Search, Filter, Star, X } from 'lucide-react'
-import Image from 'next/image';
+import MediaCard from "../components/Lists/MediaCard"
 
-const categories = ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Romance', 'Thriller', 'Horror', 'Fantasy', 'Adventure', 'Animation']
-const types = ['Series', 'Film', 'Anime']
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "3292348a48f36b094081736c090646ee"
 
-const dummyMedia = [
-  { id: 1, title: "Stranger Things", type: "Series", year: 2016, categories: ["Drama", "Fantasy", "Horror"], rating: 8.7 },
-  { id: 2, title: "Inception", type: "Film", year: 2010, categories: ["Action", "Sci-Fi", "Thriller"], rating: 8.8 },
-  { id: 3, title: "Attack on Titan", type: "Anime", year: 2013, categories: ["Action", "Fantasy", "Drama"], rating: 9.0 },
-  { id: 4, title: "The Crown", type: "Series", year: 2016, categories: ["Drama", "History"], rating: 8.6 },
-  { id: 5, title: "Parasite", type: "Film", year: 2019, categories: ["Comedy", "Drama", "Thriller"], rating: 8.6 },
-  { id: 6, title: "Death Note", type: "Anime", year: 2006, categories: ["Mystery", "Thriller", "Supernatural"], rating: 9.0 },
-  { id: 7, title: "Breaking Bad", type: "Series", year: 2008, categories: ["Crime", "Drama", "Thriller"], rating: 9.5 },
-  { id: 8, title: "The Matrix", type: "Film", year: 1999, categories: ["Action", "Sci-Fi"], rating: 8.7 },
-  { id: 9, title: "Fullmetal Alchemist: Brotherhood", type: "Anime", year: 2009, categories: ["Action", "Adventure", "Fantasy"], rating: 9.1 },
-  { id: 10, title: "Black Mirror", type: "Series", year: 2011, categories: ["Drama", "Sci-Fi", "Thriller"], rating: 8.8 },
+interface Media {
+  id: number
+  title?: string
+  name?: string
+  poster_path: string | null
+  backdrop_path: string | null
+  vote_average: number
+  overview: string
+  genre_ids: number[]
+  release_date?: string
+  first_air_date?: string
+}
+
+const MOVIE_GENRES = [
+  { id: 28, name: "Ação" },
+  { id: 12, name: "Aventura" },
+  { id: 16, name: "Animação" },
+  { id: 35, name: "Comédia" },
+  { id: 80, name: "Crime" },
+  { id: 99, name: "Documentário" },
+  { id: 18, name: "Drama" },
+  { id: 10751, name: "Família" },
+  { id: 14, name: "Fantasia" },
+  { id: 36, name: "História" },
+  { id: 27, name: "Terror" },
+  { id: 10402, name: "Música" },
+  { id: 9648, name: "Mistério" },
+  { id: 10749, name: "Romance" },
+  { id: 878, name: "Ficção Científica" },
+  { id: 10770, name: "Cinema TV" },
+  { id: 53, name: "Thriller" },
+  { id: 10752, name: "Guerra" },
+  { id: 37, name: "Faroeste" },
 ]
 
-export default function ModernMediaBrowser() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
-  const [yearRange, setYearRange] = useState([1900, new Date().getFullYear()])
-  const [minRating, setMinRating] = useState(0)
-  const [filteredMedia, setFilteredMedia] = useState(dummyMedia)
-  const [activeTab, setActiveTab] = useState("all")
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
+const TV_GENRES = [
+  { id: 10759, name: "Ação & Aventura" },
+  { id: 16, name: "Animação" },
+  { id: 35, name: "Comédia" },
+  { id: 80, name: "Crime" },
+  { id: 99, name: "Documentário" },
+  { id: 18, name: "Drama" },
+  { id: 10751, name: "Família" },
+  { id: 10762, name: "Kids" },
+  { id: 9648, name: "Mistério" },
+  { id: 10763, name: "News" },
+  { id: 10764, name: "Reality" },
+  { id: 10765, name: "Sci-Fi & Fantasy" },
+  { id: 10766, name: "Soap" },
+  { id: 10767, name: "Talk" },
+  { id: 10768, name: "Guerra & Política" },
+  { id: 37, name: "Faroeste" },
+]
+
+export default function BrowsePage() {
+  const [activeTab, setActiveTab] = useState<"movies" | "series">("movies")
+  const [media, setMedia] = useState<Media[]>([])
+  const [filteredMedia, setFilteredMedia] = useState<Media[]>([])
+  const [watchlistIds, setWatchlistIds] = useState<Set<number>>(new Set())
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedGenre, setSelectedGenre] = useState<string>("all")
+  const [selectedYear, setSelectedYear] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("popularity")
+  const [loading, setLoading] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const { toast } = useToast()
+  const { data: session } = useSession()
+
+  const currentGenres = activeTab === "movies" ? MOVIE_GENRES : TV_GENRES
+  const currentYears = Array.from({ length: 30 }, (_, i) => (new Date().getFullYear() - i).toString())
 
   useEffect(() => {
-    const filtered = dummyMedia.filter(item => 
-      (searchTerm === "" || item.title.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedCategories.length === 0 || selectedCategories.some(cat => item.categories.includes(cat))) &&
-      (selectedTypes.length === 0 || selectedTypes.includes(item.type)) &&
-      item.year >= yearRange[0] && item.year <= yearRange[1] &&
-      item.rating >= minRating &&
-      (activeTab === "all" || item.type.toLowerCase() === activeTab)
-    )
-    setFilteredMedia(filtered)
-  }, [searchTerm, selectedCategories, selectedTypes, yearRange, minRating, activeTab])
+    const fetchWatchlist = async () => {
+      if (!session) return
 
-  const clearFilters = () => {
-    setSelectedCategories([])
-    setSelectedTypes([])
-    setYearRange([1900, new Date().getFullYear()])
-    setMinRating(0)
+      try {
+        const response = await fetch("/api/watchlist")
+        const data = await response.json()
+
+        const ids = new Set<number>()
+        data.movies?.forEach((m: any) => ids.add(m.movieId))
+        data.series?.forEach((s: any) => ids.add(s.seriesId))
+
+        setWatchlistIds(ids)
+      } catch (error) {
+        console.error("Error fetching watchlist:", error)
+      }
+    }
+
+    fetchWatchlist()
+  }, [session])
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      setLoading(true)
+      try {
+        const endpoint = activeTab === "movies" ? "movie" : "tv"
+        const sortParam =
+          sortBy === "popularity" ? "popularity.desc" : sortBy === "rating" ? "vote_average.desc" : "release_date.desc"
+
+        let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${TMDB_API_KEY}&language=pt-BR&sort_by=${sortParam}&include_adult=false&page=1`
+
+        if (selectedGenre !== "all") {
+          url += `&with_genres=${selectedGenre}`
+        }
+
+        if (selectedYear !== "all") {
+          const yearParam = activeTab === "movies" ? "primary_release_year" : "first_air_date_year"
+          url += `&${yearParam}=${selectedYear}`
+        }
+
+        const response = await fetch(url)
+        const data = await response.json()
+        setMedia(data.results || [])
+        setFilteredMedia(data.results || [])
+      } catch (error) {
+        console.error("Error fetching media:", error)
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar o conteúdo",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMedia()
+  }, [activeTab, selectedGenre, selectedYear, sortBy])
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredMedia(media)
+      return
+    }
+
+    const searchMedia = async () => {
+      setLoading(true)
+      try {
+        const endpoint = activeTab === "movies" ? "movie" : "tv"
+        const response = await fetch(
+          `https://api.themoviedb.org/3/search/${endpoint}?api_key=${TMDB_API_KEY}&language=pt-BR&query=${encodeURIComponent(searchQuery)}&page=1`,
+        )
+        const data = await response.json()
+        setFilteredMedia(data.results || [])
+      } catch (error) {
+        console.error("Error searching:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const debounce = setTimeout(searchMedia, 500)
+    return () => clearTimeout(debounce)
+  }, [searchQuery, activeTab])
+
+  const toggleWatchlist = async (item: Media) => {
+    if (!session) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para adicionar à sua lista",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch("/api/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: activeTab === "movies" ? "movie" : "tv",
+          id: item.id,
+          title: item.title || item.name,
+          posterPath: item.poster_path,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.action === "added") {
+        setWatchlistIds((prev) => new Set(prev).add(item.id))
+        toast({
+          title: "Adicionado",
+          description: `${item.title || item.name} foi adicionado à sua lista`,
+        })
+      } else {
+        setWatchlistIds((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(item.id)
+          return newSet
+        })
+        toast({
+          title: "Removido",
+          description: `${item.title || item.name} foi removido da sua lista`,
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a lista",
+        variant: "destructive",
+      })
+    }
   }
 
-  return (
-    <div className="container mx-auto p-1 bg-background text-foreground">
+  const clearFilters = () => {
+    setSelectedGenre("all")
+    setSelectedYear("all")
+    setSortBy("popularity")
+    setSearchQuery("")
+  }
 
-      
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="flex-grow relative">
-          <Input
-            type="text"
-            placeholder="Search titles..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-        </div>
-        <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="md:w-auto">
-              <Filter className="mr-2 h-4 w-4" /> Filters
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-[300px] sm:w-[540px]">
-            <SheetHeader>
-              <SheetTitle>Filters</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Refine Your Search</h2>
-                <Button variant="ghost" onClick={clearFilters} className="text-sm">
-                  Clear All
-                </Button>
+  const hasActiveFilters =
+    selectedGenre !== "all" || selectedYear !== "all" || sortBy !== "popularity" || searchQuery !== ""
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+        <div className="container mx-auto px-4 py-4 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">Navegar</h1>
+
+            <div className="flex items-center gap-2">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={`Buscar ${activeTab === "movies" ? "filmes" : "séries"}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Categories</h3>
-                  <ScrollArea className="h-[200px]">
-                    <div className="grid grid-cols-2 gap-2">
-                      {categories.map(category => (
-                        <div key={category} className="flex items-center">
-                          <Checkbox
-                            id={category}
-                            checked={selectedCategories.includes(category)}
-                            onCheckedChange={(checked) => {
-                              setSelectedCategories(
-                                checked
-                                  ? [...selectedCategories, category]
-                                  : selectedCategories.filter((c) => c !== category)
-                              )
-                            }}
-                          />
-                          <label htmlFor={category} className="ml-2 text-sm">{category}</label>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Type</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {types.map(type => (
-                      <div key={type} className="flex items-center">
-                        <Checkbox
-                          id={type}
-                          checked={selectedTypes.includes(type)}
-                          onCheckedChange={(checked) => {
-                            setSelectedTypes(
-                              checked
-                                ? [...selectedTypes, type]
-                                : selectedTypes.filter((t) => t !== type)
-                            )
-                          }}
-                        />
-                        <label htmlFor={type} className="ml-2 text-sm">{type}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Year Range</h3>
-                  <Slider
-                    min={1900}
-                    max={new Date().getFullYear()}
-                    step={1}
-                    value={yearRange}
-                    onValueChange={setYearRange}
-                    className="mb-2"
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{yearRange[0]}</span>
-                    <span>{yearRange[1]}</span>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Minimum Rating</h3>
-                  <Select value={minRating.toString()} onValueChange={(value) => setMinRating(Number(value))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select minimum rating" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(rating => (
-                        <SelectItem key={rating} value={rating.toString()}>{rating.toFixed(1)}+</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "movies" | "series")} className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="movies">Filmes</TabsTrigger>
+              <TabsTrigger value="series">Séries</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {showFilters && (
+            <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/50 rounded-lg animate-in slide-in-from-top-2">
+              <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Gênero" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os gêneros</SelectItem>
+                  {currentGenres.map((genre) => (
+                    <SelectItem key={genre.id} value={genre.id.toString()}>
+                      {genre.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os anos</SelectItem>
+                  {currentYears.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popularity">Popularidade</SelectItem>
+                  <SelectItem value="rating">Avaliação</SelectItem>
+                  <SelectItem value="release">Lançamento</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="w-4 h-4 mr-2" />
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="series">Series</TabsTrigger>
-          <TabsTrigger value="film">Films</TabsTrigger>
-          <TabsTrigger value="anime">Anime</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="container mx-auto px-4 py-8">
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {Array.from({ length: 18 }).map((_, i) => (
+              <div key={i} className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : filteredMedia.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-xl text-muted-foreground mb-2">Nenhum resultado encontrado</p>
+            <p className="text-sm text-muted-foreground">Tente ajustar os filtros ou buscar por outro termo</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+            {filteredMedia.map((item, index) => {
+              const isInWatchlist = watchlistIds.has(item.id)
+              const year = item.release_date?.split("-")[0] || item.first_air_date?.split("-")[0]
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMedia.map(item => (
-          <motion.div
-            key={item.id}
-            layout
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="overflow-hidden">
-              <Image src={`https://rollingstone.com.br/media/_versions/stranger-things-4-temporada-netflix-foto-divulgacao_widelg.jpg`} alt={item.title} className="w-full h-40 object-cover" />
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-1 line-clamp-1">{item.title}</h3>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-muted-foreground">{item.year}</span>
-                  <Badge variant="secondary">{item.type}</Badge>
-                </div>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {item.categories.map(category => (
-                    <Badge key={category} variant="outline" className="text-xs">{category}</Badge>
-                  ))}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Star className="h-4 w-4 mr-1 text-yellow-400 fill-yellow-400" />
-                  {item.rating.toFixed(1)}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+              return (
+                <MediaCard
+                  key={item.id}
+                  id={item.id}
+                  title={item.title || item.name || ""}
+                  posterPath={item.poster_path}
+                  backdropPath={item.backdrop_path}
+                  voteAverage={item.vote_average}
+                  overview={item.overview}
+                  year={year}
+                  isInWatchlist={isInWatchlist}
+                  onToggleWatchlist={() => toggleWatchlist(item)}
+                  index={index}
+                />
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

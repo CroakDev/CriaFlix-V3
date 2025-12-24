@@ -1,12 +1,14 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
-import TmdbApi from '@/lib/TmdbApi'
+import TmdbApi from "@/lib/TmdbApi"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Play, Plus, Info } from "lucide-react"
 
 interface MediaItem {
   id: number
@@ -15,7 +17,9 @@ interface MediaItem {
   backdrop_path: string
   release_date?: string
   first_air_date?: string
-  media_type: 'movie' | 'tv';
+  media_type: "movie" | "tv"
+  vote_average?: number
+  overview?: string
 }
 
 interface HomeListItem {
@@ -27,6 +31,7 @@ interface HomeListItem {
 export default function MediaList() {
   const [lists, setLists] = useState<HomeListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hoveredId, setHoveredId] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchLists = async () => {
@@ -56,36 +61,156 @@ export default function MediaList() {
       </div>
     </div>
   )
+  const MediaItemComponent = ({ media }: { media: any }) => {
+    const [isHovered, setIsHovered] = useState(false)
+    const hoverRef = useRef<HTMLDivElement>(null)
 
-  const MediaItemComponent = ({ media }: { media: MediaItem }) => (
-    <motion.div className="w-full" transition={{ duration: 0.2 }}>
-     <Link href={`/media/${media.id}?mediaType=${media.media_type ?? 'movie'}`} className="block group">
-        <div className="relative aspect-video rounded-md overflow-hidden mb-2">
-          <Image
-            src={media.backdrop_path ? `https://image.tmdb.org/t/p/w500${media.backdrop_path}` : 'https://iseb3.com.br/assets/camaleon_cms/image-not-found-4a963b95bf081c3ea02923dceaeb3f8085e1a654fc54840aac61a57a60903fef.png'}
-            alt={media.title || media.name || 'Media Poster'}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            object-fit="cover"
-            className="transition-transform duration-300 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center">
-            <Button variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Play</Button>
+    const title = media.title || media.name || "Título não disponível"
+    const year = (media.release_date || media.first_air_date || "")?.substring(0, 4)
+
+    return (
+      <div
+        className="relative w-full overflow-visible"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={(e) => {
+          // se o mouse ainda estiver dentro do card ou da área invisível, não desativa o hover
+          if (hoverRef.current && hoverRef.current.contains(e.relatedTarget as Node)) return
+          setIsHovered(false)
+        }}
+      >
+        {/* Card base */}
+        <Link
+          href={`/media/${media.id}?mediaType=${media.media_type ?? "movie"}`}
+          className="block group"
+        >
+          <div className="relative aspect-video rounded-md overflow-hidden mb-2">
+            <Image
+              src={
+                media.backdrop_path
+                  ? `https://image.tmdb.org/t/p/w500${media.backdrop_path}`
+                  : "https://iseb3.com.br/assets/camaleon_cms/image-not-found-4a963b95bf081c3ea02923dceaeb3f8085e1a654fc54840aac61a57a60903fef.png"
+              }
+              alt={title}
+              fill
+              loading="lazy"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
           </div>
-        </div>
-        <div className="flex space-x-2">
           <div>
             <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors duration-200">
-              {media.title || media.name || 'Title not available'}
+              {title}
             </h3>
             <p className="text-xs text-zinc-900 dark:text-white dark:text-opacity-[0.6]">
-              {media.media_type === 'tv' ? 'Serie' : 'Movie'} • {(media.release_date || media.first_air_date || 'Date not available')?.substring(0, 4)}
+              {media.media_type === "tv" ? "Série" : "Filme"} • {year}
             </p>
           </div>
+        </Link>
+
+        {/* Card de detalhes com área de segurança invisível */}
+        <div
+          ref={hoverRef}
+          onMouseLeave={(e) => {
+            // só fecha se o mouse realmente sair da área toda (card + zona de segurança)
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIsHovered(false)
+            }
+          }}
+          className="absolute top-0  z-50"
+          style={{ pointerEvents: isHovered ? "auto" : "none" }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scaleY: 0.8 }}
+            animate={
+              isHovered
+                ? { opacity: 1, scaleY: 1 }
+                : { opacity: 0, scaleY: 0.8 }
+            }
+            transition={{ duration: 0.19, ease: "easeOut" }}
+            style={{
+              width: "280px",
+              minHeight: "420px",
+              transformOrigin: "top center",
+            }}
+            className="relative bg-background border border-border/50 rounded-lg shadow-2xl"
+          >
+            {/* Imagem topo */}
+            <div className="relative w-full h-[160px] rounded-t-lg overflow-hidden cursor-pointer">
+              <Image
+                src={
+                  media.backdrop_path
+                    ? `https://image.tmdb.org/t/p/w500${media.backdrop_path}`
+                    : "https://iseb3.com.br/assets/camaleon_cms/image-not-found-4a963b95bf081c3ea02923dceaeb3f8085e1a654fc54840aac61a57a60903fef.png"
+                }
+                alt={title}
+                fill
+                loading="lazy"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+              <div className="absolute top-2 right-2 bg-primary/40 backdrop-blur-sm px-3 py-1 rounded text-xs font-bold text-white">
+                CriaFlix
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="p-4 space-y-3">
+              <h3 className="font-bold text-base line-clamp-2">{title}</h3>
+
+              <div className="flex items-center gap-1 text-xs text-primary">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>Incluso com assinatura CriaFlix</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/media/${media.id}?mediaType=${media.media_type ?? "movie"}`}
+                  className="flex-1"
+                >
+                  <Button
+                    size="sm"
+                    className="w-full bg-white text-black hover:bg-white/90 font-semibold h-9"
+                  >
+                    <Play className="w-4 h-4 mr-1 fill-current" />
+                    Reproduzir
+                  </Button>
+                </Link>
+
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="shrink-0 h-9 w-9 rounded-full border border-white/30 text-white hover:bg-white/20 bg-black/50"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                {year && <span>{year}</span>}
+                <span>{media.media_type === "tv" ? "Série" : "Filme"}</span>
+              </div>
+
+              {media.overview && (
+                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+                  {media.overview}
+                </p>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Zona invisível abaixo do card — evita que o mouse saia acidentalmente */}
+          <div className="absolute top-full left-0 w-full h-6 bg-transparent" />
         </div>
-      </Link>
-    </motion.div>
-  );
+      </div>
+    )
+  }
+
+
 
   return (
     <div className="w-full space-y-8 py-6 px-4 pt-1">

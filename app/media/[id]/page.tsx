@@ -89,7 +89,7 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
                 { id: 'server2', name: 'Warez', url: `https://embed.warezcdn.link/filme/${media.externalIds.imdb_id}#colorA36AF9#noLink`, country: 'BR', premium: false },
                 { id: 'server3', name: 'GoApi', url: `https://gofilmes.me/play/w2.php?TXRjbUdBVGR4a3ZTbFM4U0ZSZmVHUT09`, country: 'BR', premium: true }, // Mudança de string para boolean
                 { id: 'server4', name: 'VidSrc', url: `https://vidsrc.me/embed/movie/${media.id}`, country: 'US', premium: false },
-                { id: 'server5', name: 'Servidor 4', url: 'https://example.com/embed/server4', country: 'US', premium: false },
+                { id: 'server5', name: 'Servidor Alpha', url: `https://spencerdevs.xyz/movie/${media.externalIds.imdb_id}#colorA36AF9#noLink`, country: 'US', premium: false },
                 { id: 'server6', name: 'Servidor 5', url: 'https://example.com/embed/server5', country: 'DE', premium: false },
             ]
         }
