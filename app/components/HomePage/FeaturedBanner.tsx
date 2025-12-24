@@ -234,4 +234,3 @@ function FeaturedBanner() {
 }
 
 export default FeaturedBanner
-

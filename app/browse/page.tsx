@@ -229,20 +229,20 @@ export default function BrowsePage() {
     selectedGenre !== "all" || selectedYear !== "all" || sortBy !== "popularity" || searchQuery !== ""
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
-        <div className="container mx-auto px-4 py-4 space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold">Navegar</h1>
+        <div className="container mx-auto px-2 sm:px-4 py-4 space-y-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold">Navegar</h1>
 
             <div className="flex items-center gap-2">
-              <div className="relative w-full max-w-md">
+              <div className="relative w-full max-w-[200px] sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder={`Buscar ${activeTab === "movies" ? "filmes" : "séries"}...`}
+                  placeholder={`Buscar...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 text-sm"
                 />
               </div>
 
@@ -250,6 +250,7 @@ export default function BrowsePage() {
                 variant={showFilters ? "default" : "outline"}
                 size="icon"
                 onClick={() => setShowFilters(!showFilters)}
+                className="shrink-0"
               >
                 <Filter className="w-4 h-4" />
               </Button>
@@ -315,9 +316,9 @@ export default function BrowsePage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-8">
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
             {Array.from({ length: 18 }).map((_, i) => (
               <div key={i} className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
             ))}
@@ -328,7 +329,7 @@ export default function BrowsePage() {
             <p className="text-sm text-muted-foreground">Tente ajustar os filtros ou buscar por outro termo</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-8">
             {filteredMedia.map((item, index) => {
               const isInWatchlist = watchlistIds.has(item.id)
               const year = item.release_date?.split("-")[0] || item.first_air_date?.split("-")[0]

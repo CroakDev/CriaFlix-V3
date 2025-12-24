@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import PremiumModal from "../components/PremiumModal"
 import { useTranslations } from "next-intl"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 
 interface SearchResult {
   id: number
@@ -44,13 +45,13 @@ export default function NavbarComponent() {
   const router = useRouter()
   const theme = useContext(ThemeContext)
   const { setTheme } = useTheme()
-  const { data: session, status } = useSession() // Obtém a sessão do usuário
+  const { data: session, status } = useSession()
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isVip, setIsVip] = useState(false) // Estado para verificar se o usuário é VIP
-  const [loading, setLoading] = useState(true) // Estado de carregamento
+  const [isVip, setIsVip] = useState(false)
+  const [loading, setLoading] = useState(true)
   const navb = useTranslations("NavBar")
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function NavbarComponent() {
         } catch (error) {
           console.error("Error fetching user info:", error)
         } finally {
-          setLoading(false) // Desativa o carregamento
+          setLoading(false)
         }
       }
     }
@@ -90,10 +91,9 @@ export default function NavbarComponent() {
       if (!response.ok) throw new Error("Failed to fetch results")
 
       const data = await response.json()
-      console.log("API Data:", data) // Log API data
       setSearchResults(data.results)
     } catch (err) {
-      console.error("Search Error:", err) // Log error
+      console.error("Search Error:", err)
       setError("An error occurred while searching. Please try again.")
       setSearchResults([])
     } finally {
@@ -136,7 +136,6 @@ export default function NavbarComponent() {
   }
 
   if (loading) {
-    // Skeleton enquanto os dados são carregados
     return (
       <header className="sticky z-50 flex items-center justify-between w-full px-4 py-4">
         <div className="flex items-center">
@@ -153,19 +152,19 @@ export default function NavbarComponent() {
   }
 
   if (!session) {
-    return null // Não renderiza o conteúdo da página se não estiver autenticado
+    return null
   }
 
   return (
     <>
       <PremiumModal open={premiumModalOpen} onOpenChange={setPremiumModalOpen} />
 
-      <header className="sticky z-50 flex items-center justify-between w-[calc(100%-12rem)] ml-auto text-sm py-4">
+      <header className="sticky top-0 z-50 flex items-center justify-between w-full md:w-[calc(100%-12rem)] md:ml-auto text-sm py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="w-full px-4 flex items-center justify-between" aria-label="Global">
-          <div className="flex items-center">
-            <div className="sm:hidden">
+          <div className="flex items-center gap-2">
+            <div className="md:hidden">
               <Sheet>
-                <SheetTrigger className=" mt-2">
+                <SheetTrigger className="mt-2">
                   <Menu />
                 </SheetTrigger>
                 <SheetContent side={"left"} className="w-[300px] sm:w-[340px]">
@@ -184,8 +183,9 @@ export default function NavbarComponent() {
               onClick={() => setOpen(true)}
             >
               <Search className="mr-2 h-4 w-4 text-xs" />
-              {navb("inputsearch")}
-              <p className="text-sm text-muted-foreground ml-2">
+              <span className="hidden sm:inline">{navb("inputsearch")}</span>
+              <span className="sm:hidden">Buscar</span>
+              <p className="text-sm text-muted-foreground ml-2 hidden sm:block">
                 <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-zinc-200 dark:bg-zinc-700/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                   <span className="text-xs">⌘</span>J
                 </kbd>
@@ -248,15 +248,20 @@ export default function NavbarComponent() {
               </CommandList>
             </CommandDialog>
           </div>
-          <div className="flex items-center ml-auto">
-            {!isVip && ( // Condição para exibir o botão apenas se o usuário não for VIP
-              <Button className="bg-[#ffc34f]/20 mr-2 text-[#ffc34f] hover:bg-[#ffc34f]/30" onClick={() => setPremiumModalOpen(true)}>
-                <Crown className="w-4 h-4 mr-1" />
-                {navb("btnPremium")}
+          <div className="flex items-center ml-auto gap-2">
+            {!isVip && (
+              <Button
+                className="bg-[#ffc34f]/20 text-[#ffc34f] hover:bg-[#ffc34f]/30 hidden sm:flex"
+                onClick={() => setPremiumModalOpen(true)}
+              >
+                <Crown className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">{navb("btnPremium")}</span>
               </Button>
             )}
 
-            <div className="bg-zinc-600/20 mr-3 p-2 rounded-lg">
+            <LanguageSwitcher />
+
+            <div className="bg-zinc-600/20 p-2 rounded-lg">
               <DarkModeSwitch
                 className="sm:block"
                 checked={theme?.theme === "dark"}
@@ -266,18 +271,18 @@ export default function NavbarComponent() {
             </div>
 
             <DropdownMenu>
-              <DropdownMenuTrigger className="mr-2" asChild>
-                <a className="flex items-center space-x-2 font-medium" href="#" aria-current="page">
-                  <Avatar>
+              <DropdownMenuTrigger asChild>
+                <a className="flex items-center space-x-2 font-medium cursor-pointer" aria-current="page">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                     <AvatarImage src={session.user?.image || ""} />
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
                 </a>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link href="/profile" className="flex items-center py-2 cursor-pointer">
-                    <Icon.User size={15} className="mr-2" /> Profile & Settings
+                    <Icon.User size={15} className="mr-2" /> {navb("profile")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => signOut()} className="text-red-400 py-2">

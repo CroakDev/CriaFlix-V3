@@ -108,10 +108,10 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="container mx-auto p-1 bg-background text-foreground">
+    <div className="container mx-auto p-2 sm:p-4 pb-20 md:pb-4 bg-background text-foreground">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Your Watchlist</h1>
-        <Badge variant="secondary" className="text-lg px-4 py-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">Your Watchlist</h1>
+        <Badge variant="secondary" className="text-sm sm:text-lg px-3 sm:px-4 py-1 sm:py-2">
           {watchlist.length} {watchlist.length === 1 ? "item" : "items"}
         </Badge>
       </div>
@@ -138,7 +138,7 @@ export default function WatchlistPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           <AnimatePresence>
             {filteredMedia.map((item) => {
               const title = item.title || item.name || "Untitled"

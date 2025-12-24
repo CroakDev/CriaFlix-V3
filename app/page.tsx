@@ -1,21 +1,20 @@
 "use client"
 
-import { useSession } from "next-auth/react";
-import { useRouter } from 'next/navigation';
-import LoginForm from "./components/LoginForm";
-import { TextAnimate } from "../components/ui/text-animate";
-import {useTranslations} from 'next-intl';
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import LoginForm from "./components/LoginForm"
+import { TextAnimate } from "../components/ui/text-animate"
+import { useTranslations } from "next-intl"
 
 function Home() {
-  const t = useTranslations('HomePage');
-  
-  const { data: session, status } = useSession(); // Obtém o estado da sessão
-  const router = useRouter();
+  const t = useTranslations("HomePage")
 
-  // Redireciona se o usuário já estiver autenticado
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
   if (status === "authenticated") {
-    router.push("/home");
-    return null; // Retorna null para evitar renderizar o componente enquanto redireciona
+    router.push("/home")
+    return null
   }
 
   return (
@@ -33,12 +32,10 @@ function Home() {
           <div className="absolute inset-0 flex flex-col justify-center items-center text-white px-6">
             <TextAnimate text="#V3" type="rollIn" />
             <h1 className="text-4xl font-bold mb-4">
-              Welcome to{" "}
+              {t("welcome")}{" "}
               <b className="bg-gradient-to-r from-[#3f49a7] to-indigo-400 text-transparent bg-clip-text">CriaFlix.</b>
             </h1>
-            <p className="text-lg max-w-lg text-center text-zinc-300">
-              Log in to access your favorite playlists and discover new content. Join us and enjoy a unique streaming experience.
-            </p>
+            <p className="text-lg max-w-lg text-center text-zinc-300">{t("subtitle")}</p>
           </div>
         </div>
       </div>
@@ -50,8 +47,7 @@ function Home() {
           <div className="p-4 rounded-md">
             <LoginForm />
             <p className="text-zinc-600 text-sm mt-6 text-center">
-              By signing in, you agree to CriaFlix{" "}
-              <span className="underline">Terms of Service</span>
+              By signing in, you agree to CriaFlix <span className="underline">Terms of Service</span>
               <br />
               <span className="underline">Privacy Policy</span> and{" "}
               <span className="underline">Data Usage Properties</span>
@@ -60,7 +56,7 @@ function Home() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default Home;
+export default Home

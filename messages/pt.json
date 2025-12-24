@@ -1,7 +1,9 @@
 {
   "HomePage": {
     "title": "Olá Mundo!",
-    "about": "Go to the about page"
+    "about": "Ir para a página sobre",
+    "welcome": "Bem-vindo ao",
+    "subtitle": "Faça login para acessar suas playlists favoritas e descobrir novo conteúdo. Junte-se a nós e aproveite uma experiência única de streaming."
   },
   "Sidebar": {
     "tag1": "Descubra",
@@ -9,21 +11,140 @@
     "option1": "Início",
     "option2": "Navegar",
     "option3": "Favoritos",
-    "option4": "Playlist",
+    "option4": "Playlists",
     "option5": "Lançamentos",
     "option6": "Feito para Você",
     "option7": "Comunidade",
+    "option8": "Ver Depois",
     "upgrade": "Atualize seu plano para mais recursos!",
-    "buttonupgrade": "Atualizar Agora"
+    "buttonupgrade": "Atualizar Agora",
+    "vipMember": "Você é um membro VIP! Aproveite seus benefícios exclusivos!"
   },
   "NavBar": {
     "btnPremium": "Comprar Premium",
-    "inputsearch": "O que você está procurando aqui?",
-    "btnlogout": "Sair"
+    "inputsearch": "O que você está procurando?",
+    "btnlogout": "Sair",
+    "profile": "Perfil e Configurações"
   },
   "FeaturedMidia": {
     "btwath": "Assistir agora",
-    "btaddwl": "Adicionar a lista",
+    "btaddwl": "Adicionar à lista",
     "btadded": "Adicionado"
+  },
+  "Playlists": {
+    "title": "Minhas Playlists",
+    "subtitle": "Organize seus filmes e séries favoritos",
+    "create": "Criar Playlist",
+    "createNew": "Criar Nova Playlist",
+    "edit": "Editar Playlist",
+    "empty": "Nenhuma playlist ainda",
+    "emptyDescription": "Crie sua primeira playlist para organizar seu conteúdo",
+    "items": "itens",
+    "item": "item",
+    "view": "Ver",
+    "delete": "Excluir",
+    "titleLabel": "Título",
+    "descriptionLabel": "Descrição",
+    "descriptionPlaceholder": "Descrição opcional...",
+    "makePublic": "Tornar Pública",
+    "createButton": "Criar Playlist",
+    "updateButton": "Atualizar Playlist",
+    "deleteConfirm": "Tem certeza?",
+    "deleteDescription": "Esta ação não pode ser desfeita. Isso excluirá permanentemente a playlist e todos os seus itens.",
+    "cancel": "Cancelar",
+    "remove": "Remover",
+    "addedSuccess": "Item adicionado à playlist",
+    "removedSuccess": "Item removido da playlist",
+    "createdSuccess": "Playlist criada com sucesso",
+    "updatedSuccess": "Playlist atualizada com sucesso",
+    "deletedSuccess": "Playlist excluída com sucesso",
+    "titleRequired": "O título é obrigatório",
+    "by": "Por",
+    "emptyPlaylist": "Esta playlist está vazia",
+    "browseContent": "Navegar Conteúdo",
+    "share": "Compartilhar",
+    "linkCopied": "Link copiado!",
+    "linkCopiedDescription": "Link da playlist copiado para a área de transferência",
+    "back": "Voltar"
+  },
+  "Favorites": {
+    "title": "Favoritos",
+    "empty": "Nenhum favorito ainda",
+    "emptyDescription": "Comece a adicionar seus filmes e séries favoritos!",
+    "all": "Todos",
+    "movies": "Filmes",
+    "series": "Séries",
+    "removedSuccess": "Removido dos Favoritos",
+    "removedDescription": "Item removido com sucesso"
+  },
+  "WatchLater": {
+    "title": "Ver Depois",
+    "empty": "Sua lista de ver depois está vazia",
+    "emptyDescription": "Adicione filmes e séries que você quer assistir depois!",
+    "all": "Todos",
+    "movies": "Filmes",
+    "series": "Séries",
+    "removedSuccess": "Removido de Ver Depois",
+    "removedDescription": "Item removido com sucesso"
+  },
+  "Browse": {
+    "title": "Navegar",
+    "searchPlaceholder": "Buscar...",
+    "movies": "Filmes",
+    "series": "Séries",
+    "allGenres": "Todos os gêneros",
+    "allYears": "Todos os anos",
+    "sortBy": "Ordenar por",
+    "popularity": "Popularidade",
+    "rating": "Avaliação",
+    "release": "Lançamento",
+    "clearFilters": "Limpar filtros",
+    "noResults": "Nenhum resultado encontrado",
+    "noResultsDescription": "Tente ajustar os filtros ou buscar por outro termo",
+    "loginRequired": "Login necessário",
+    "loginDescription": "Faça login para adicionar à sua lista",
+    "added": "Adicionado",
+    "addedDescription": "foi adicionado à sua lista",
+    "removed": "Removido",
+    "removedDescription": "foi removido da sua lista",
+    "error": "Erro",
+    "errorDescription": "Não foi possível atualizar a lista"
+  },
+  "NewReleases": {
+    "title": "Lançamentos",
+    "subtitle": "Últimos filmes e séries dos últimos 30 dias",
+    "movies": "Filmes",
+    "series": "Séries",
+    "noResults": "Nenhum lançamento encontrado"
+  },
+  "Community": {
+    "title": "Comunidade",
+    "subtitle": "Descubra playlists públicas de outros usuários",
+    "empty": "Ainda não há playlists públicas",
+    "emptyDescription": "Seja o primeiro a compartilhar uma playlist com a comunidade!",
+    "createPublic": "Criar Playlist Pública",
+    "viewPlaylist": "Ver Playlist"
+  },
+  "MadeForYou": {
+    "title": "Feito para Você",
+    "subtitlePersonalized": "Recomendações personalizadas baseadas em seus favoritos e lista",
+    "subtitleTrending": "Conteúdo em alta para você começar",
+    "noHistory": "Comece a adicionar conteúdo aos seus favoritos ou lista para receber recomendações personalizadas!",
+    "noResults": "Nenhuma recomendação disponível"
+  },
+  "Common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "year": "Ano",
+    "details": "Detalhes",
+    "noImage": "Sem Imagem"
   }
 }
