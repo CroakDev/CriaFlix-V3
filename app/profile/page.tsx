@@ -559,7 +559,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="bg-muted/50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-muted-foreground">You don't have an active subscription</p>
+                    <p className="text-sm text-muted-foreground">Você não possui uma assinatura ativa.</p>
                   </div>
                 )}
               </div>
