@@ -38,7 +38,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
             <ThemeProvider
                 attribute="class"
-                defaultTheme={'light'}
+                defaultTheme={'dark'}
                 enableSystem
                 disableTransitionOnChange
             >

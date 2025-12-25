@@ -262,15 +262,6 @@ export default function NavbarComponent() {
 
             <LanguageSwitcher />
 
-            <div className="bg-zinc-600/20 p-2 rounded-lg">
-              <DarkModeSwitch
-                className="sm:block"
-                checked={theme?.theme === "dark"}
-                onChange={onDarkModeToggle}
-                size={20}
-              />
-            </div>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <a className="flex items-center space-x-2 font-medium cursor-pointer" aria-current="page">
