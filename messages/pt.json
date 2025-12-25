@@ -65,7 +65,13 @@
     "share": "Compartilhar",
     "linkCopied": "Link copiado!",
     "linkCopiedDescription": "Link da playlist copiado para a área de transferência",
-    "back": "Voltar"
+    "back": "Voltar",
+    "addToPlaylist": "Adicionar à Playlist",
+    "addedToPlaylist": "Adicionado à playlist",
+    "alreadyInPlaylist": "Já está na playlist",
+    "createNewPlaylist": "Criar nova playlist",
+    "failedToAdd": "Falha ao adicionar à playlist",
+    "error": "Erro"
   },
   "Favorites": {
     "title": "Favoritos",

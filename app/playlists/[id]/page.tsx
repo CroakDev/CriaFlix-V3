@@ -10,6 +10,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useToast } from "@/components/ui/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
+import PlaylistDropdown from "@/app/components/PlaylistDropdown"
 
 interface PlaylistItem {
   id: number
@@ -49,6 +50,17 @@ export default function PlaylistDetailPage() {
     if (params.id) {
       fetchPlaylist()
     }
+  }, [params.id])
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (params.id) {
+        fetchPlaylist()
+      }
+    }
+
+    window.addEventListener('refreshPlaylists', handleRefresh)
+    return () => window.removeEventListener('refreshPlaylists', handleRefresh)
   }, [params.id])
 
   const fetchPlaylist = async () => {
@@ -216,6 +228,12 @@ export default function PlaylistDetailPage() {
                         <Button size="sm" variant="destructive" onClick={() => removeFromPlaylist(item.playlistItemId)}>
                           <X className="h-4 w-4 mr-1" /> Remove
                         </Button>
+                        <PlaylistDropdown
+                          mediaId={item.id}
+                          mediaType={item.media_type === "movie" ? "movie" : "tv"}
+                          mediaTitle={item.title || item.name || ""}
+                          posterPath={item.poster_path}
+                        />
                       </div>
                       <Button
                         size="icon"

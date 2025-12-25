@@ -9,6 +9,7 @@ import TmdbApi from "@/lib/TmdbApi"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Play, Plus, Info } from "lucide-react"
+import PlaylistDropdown from "@/app/components/PlaylistDropdown"
 
 interface MediaItem {
   id: number
@@ -181,13 +182,12 @@ export default function MediaList() {
                   </Button>
                 </Link>
 
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="shrink-0 h-9 w-9 rounded-full border border-white/30 text-white hover:bg-white/20 bg-black/50"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+                <PlaylistDropdown
+                  mediaId={media.id}
+                  mediaType={media.media_type === "tv" ? "tv" : "movie"}
+                  mediaTitle={title}
+                  posterPath={media.backdrop_path}
+                />
               </div>
 
               <div className="flex items-center gap-2 text-xs text-gray-400">

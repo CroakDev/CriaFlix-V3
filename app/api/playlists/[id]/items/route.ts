@@ -23,6 +23,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
     // Check ownership
     const playlist = await prisma.playlist.findUnique({
       where: { id: playlistId },
+      include: {
+        _count: {
+          select: { items: true },
+        },
+      },
     })
 
     if (!playlist || playlist.userId !== user.id) {
@@ -50,7 +55,17 @@ export async function POST(request: Request, { params }: { params: { id: string 
       await prisma.playlistItem.delete({
         where: { id: existingItem.id },
       })
-      return NextResponse.json({ action: "removed" })
+      
+      // Update playlist timestamp
+      await prisma.playlist.update({
+        where: { id: playlistId },
+        data: { updatedAt: new Date() },
+      })
+      
+      return NextResponse.json({ 
+        action: "removed",
+        itemCount: Math.max(0, playlist._count.items - 1)
+      })
     }
 
     // Add new item
@@ -64,7 +79,17 @@ export async function POST(request: Request, { params }: { params: { id: string 
       },
     })
 
-    return NextResponse.json({ action: "added", item })
+    // Update playlist timestamp
+    await prisma.playlist.update({
+      where: { id: playlistId },
+      data: { updatedAt: new Date() },
+    })
+
+    return NextResponse.json({ 
+      action: "added", 
+      item,
+      itemCount: playlist._count.items + 1
+    })
   } catch (error) {
     console.error("Error adding to playlist:", error)
     return NextResponse.json({ error: "Failed to add to playlist" }, { status: 500 })

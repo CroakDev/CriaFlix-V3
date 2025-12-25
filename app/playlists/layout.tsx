@@ -9,12 +9,14 @@ import type { Session } from "next-auth"
 
 function PlaylistsLayout({ children, session }: { children: React.ReactNode; session?: Session | null }) {
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen">
       <SessionProvider session={session ?? undefined}>
         <NavbarComponent />
         <div className="flex flex-1 overflow-hidden">
           <SidebarMenu />
-          <main className="flex-1 w-full md:ml-48 p-4 pb-20 md:pb-4 overflow-auto">{children}</main>
+          <main className="flex-1 w-full md:ml-48 p-4 pb-20 md:pb-4 overflow-auto bg-background">
+            {children}
+          </main>
         </div>
         <MobileBottomNav />
       </SessionProvider>

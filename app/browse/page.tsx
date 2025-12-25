@@ -347,6 +347,7 @@ export default function BrowsePage() {
                   isInWatchlist={isInWatchlist}
                   onToggleWatchlist={() => toggleWatchlist(item)}
                   index={index}
+                  mediaType={activeTab === "movies" ? "movie" : "tv"}
                 />
               )
             })}

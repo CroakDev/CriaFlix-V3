@@ -81,56 +81,56 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
 
   const serverData = media
     ? {
-        backgroundImage: `https://image.tmdb.org/t/p/w500${media.backdrop_path}`,
-        servers: [
-          {
-            id: "server1",
-            name: "SuperFlix",
-            url: `https://superflixapi.asia/filme/${media.externalIds.imdb_id}#colorA36AF9#noLink`,
-            country: "BR",
-            premium: false,
-          },
-          {
-            id: "server2",
-            name: "Warez",
-            url: `https://embed.warezcdn.link/filme/${media.externalIds.imdb_id}#colorA36AF9#noLink`,
-            country: "BR",
-            premium: false,
-          },
-          {
-            id: "server3",
-            name: "GoApi",
-            url: `https://gofilmes.me/play/w2.php?TXRjbUdBVGR4a3ZTbFM4U0ZSZmVHUT09`,
-            country: "BR",
-            premium: true,
-          }, // Mudança de string para boolean
-          {
-            id: "server4",
-            name: "VidSrc",
-            url: `https://vidsrc.me/embed/movie/${media.id}`,
-            country: "US",
-            premium: false,
-          },
-          {
-            id: "server5",
-            name: "Servidor Alpha",
-            url: `https://spencerdevs.xyz/movie/${media.externalIds.imdb_id}#colorA36AF9#noLink`,
-            country: "US",
-            premium: false,
-          },
-          {
-            id: "server6",
-            name: "Servidor 5",
-            url: "https://example.com/embed/server5",
-            country: "DE",
-            premium: false,
-          },
-        ],
-      }
+      backgroundImage: `https://image.tmdb.org/t/p/w500${media.backdrop_path}`,
+      servers: [
+        {
+          id: "server1",
+          name: "SuperFlix",
+          url: `https://superflixapi.asia/filme/${media.externalIds.imdb_id}#colorA36AF9#noLink`,
+          country: "BR",
+          premium: false,
+        },
+        {
+          id: "server2",
+          name: "Warez",
+          url: `https://embed.warezcdn.link/filme/${media.externalIds.imdb_id}#colorA36AF9#noLink`,
+          country: "BR",
+          premium: false,
+        },
+        {
+          id: "server3",
+          name: "GoApi",
+          url: `https://gofilmes.me/play/w2.php?TXRjbUdBVGR4a3ZTbFM4U0ZSZmVHUT09`,
+          country: "BR",
+          premium: true,
+        }, // Mudança de string para boolean
+        {
+          id: "server4",
+          name: "VidSrc",
+          url: `https://vidsrc.me/embed/movie/${media.id}`,
+          country: "US",
+          premium: false,
+        },
+        {
+          id: "server5",
+          name: "Servidor Alpha",
+          url: `https://spencerdevs.xyz/movie/${media.externalIds.imdb_id}#colorA36AF9#noLink`,
+          country: "US",
+          premium: false,
+        },
+        {
+          id: "server6",
+          name: "Servidor 5",
+          url: "https://example.com/embed/server5",
+          country: "DE",
+          premium: false,
+        },
+      ],
+    }
     : {
-        backgroundImage: "https://example.com/background-image.jpg",
-        servers: [],
-      }
+      backgroundImage: "https://example.com/background-image.jpg",
+      servers: [],
+    }
 
   return (
     <div className="container mx-auto px-2 sm:px-4 max-w-full">
@@ -146,9 +146,9 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
               <span className="ml-1">
                 {media.release_date || media.first_air_date
                   ? formatDistanceToNow(new Date(media.release_date || (media.first_air_date as string)), {
-                      locale: ptBR,
-                      addSuffix: true,
-                    })
+                    locale: ptBR,
+                    addSuffix: true,
+                  })
                   : "Data não disponível"}
               </span>
             </p>
@@ -172,19 +172,34 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
           <div className="flex items-center justify-between mt-4 pb-4 border-b">
             <div className="flex items-center space-x-2">
               {media.production_companies && media.production_companies.length > 0 ? (
-                <Avatar>
+                <Avatar className="w-10 h-10 bg-primary flex items-center justify-center">
                   <AvatarImage
-                    src={`https://image.tmdb.org/t/p/w500${media.production_companies[0].logo_path || "/placeholder-user.jpg"}`}
+                    src={
+                      media.production_companies[0].logo_path
+                        ? `https://image.tmdb.org/t/p/w500${media.production_companies[0].logo_path}`
+                        : "/placeholder-user.jpg"
+                    }
                     alt={media.production_companies[0].name}
+                    className="object-contain w-6 h-6 invert brightness-0"
                   />
-                  <AvatarFallback>{media.production_companies[0].name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {media.production_companies[0].name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
               ) : (
-                <Avatar>
-                  <AvatarImage src="/placeholder-user.jpg" alt="Channel" />
-                  <AvatarFallback>CN</AvatarFallback>
+                <Avatar className="w-10 h-10 bg-primary flex items-center justify-center">
+                  <AvatarImage
+                    src="/placeholder-user.jpg"
+                    alt="Channel"
+                    className="object-contain w-6 h-6 invert brightness-0"
+                  />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    CN
+                  </AvatarFallback>
                 </Avatar>
               )}
+
+
 
               <div>
                 <h2 className="font-semibold">

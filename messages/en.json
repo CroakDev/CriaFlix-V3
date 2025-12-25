@@ -65,7 +65,13 @@
     "share": "Share",
     "linkCopied": "Link copied!",
     "linkCopiedDescription": "Playlist link copied to clipboard",
-    "back": "Back"
+    "back": "Back",
+    "addToPlaylist": "Add to Playlist",
+    "addedToPlaylist": "Added to playlist",
+    "alreadyInPlaylist": "Already in playlist",
+    "createNewPlaylist": "Create new playlist",
+    "failedToAdd": "Failed to add to playlist",
+    "error": "Error"
   },
   "Favorites": {
     "title": "Favorites",
