@@ -28,6 +28,7 @@ import Link from "next/link"
 import PremiumModal from "../components/PremiumModal"
 import { useTranslations } from "next-intl"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import logo from "@/assets/logon.png"
 
 interface SearchResult {
   id: number
@@ -164,28 +165,8 @@ export default function NavbarComponent() {
           <div className="flex items-center gap-2">
             <div className="md:hidden">
               <Link href="/home" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg">C</span>
-                </div>
-                <span className="font-bold text-xl">CriaFlix</span>
+               <Image src={logo} alt="Criaflix" className="max-w-[120px]"/>
               </Link>
-            </div>
-
-            {/* Desktop menu button */}
-            <div className="hidden md:block">
-              <Sheet>
-                <SheetTrigger className="mt-2">
-                  <Menu />
-                </SheetTrigger>
-                <SheetContent side={"left"} className="w-[300px] sm:w-[340px]">
-                  <SheetHeader>
-                    <SheetTitle className="text-left text-xl font-bold ml-3">CriaFlix</SheetTitle>
-                    <SheetDescription>
-                      <SidebarMenu />
-                    </SheetDescription>
-                  </SheetHeader>
-                </SheetContent>
-              </Sheet>
             </div>
 
             {/* Mobile search button */}
