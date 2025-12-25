@@ -155,7 +155,7 @@ export default function MediaList() {
         lists.map((list) => (
           <div key={list.slug} className="space-y-4">
             <h2 className="text-xl font-bold">{list.title}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-3 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
               {list.items.slice(0, 12).map((media, index) => {
                 const title = media.title || media.name || ""
                 const year = (media.release_date || media.first_air_date || "")?.substring(0, 4)

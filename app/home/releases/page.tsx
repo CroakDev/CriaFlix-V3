@@ -175,7 +175,7 @@ export default function NewReleasesPage() {
 
       <div className="container mx-auto px-4">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {Array.from({ length: 18 }).map((_, i) => (
               <MediaCardSkeleton key={i} />
             ))}
@@ -195,7 +195,7 @@ export default function NewReleasesPage() {
             <p className="text-muted-foreground text-lg">{t("noResults")}</p>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {media.map((item, index) => {
               const isInFavorites = favoritesIds.has(item.id)
               const year = item.release_date?.split("-")[0] || item.first_air_date?.split("-")[0]

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Play, Plus, Check, Volume2, VolumeX, ChevronDown, Youtube } from "lucide-react"
+import { X, Play, Plus, Check, Volume2, VolumeX, ChevronDown, Youtube, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
@@ -47,6 +47,7 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
   const [loading, setLoading] = useState(false)
   const [muted, setMuted] = useState(true)
   const [showTrailerOnly, setShowTrailerOnly] = useState(false)
+  const [hasAccess, setHasAccess] = useState(true)
   const { toast } = useToast()
   const router = useRouter()
   const t = useTranslations("Common")
@@ -55,6 +56,7 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
     if (isOpen && mediaId) {
       fetchDetails()
       checkFavorites()
+      checkSubscription()
     }
   }, [isOpen, mediaId, mediaType])
 
@@ -133,8 +135,27 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
   }
 
   const handlePlay = () => {
+    if (!hasAccess) {
+      toast({
+        title: "Assinatura necessária",
+        description: "Você precisa ser VIP para assistir este conteúdo",
+        variant: "destructive",
+      })
+      router.push("/profile")
+      return
+    }
     router.push(`/media/${mediaId}?mediaType=${mediaType}`)
     onClose()
+  }
+
+  const checkSubscription = async () => {
+    try {
+      const res = await fetch("/api/subscription/check")
+      const data = await res.json()
+      setHasAccess(data.hasAccess)
+    } catch (error) {
+      console.error("Error checking subscription:", error)
+    }
   }
 
   if (!isOpen) return null
@@ -223,7 +244,7 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
                         style={{ pointerEvents: "none" }}
                       />
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-[#18181bc7] pointer-events-none z-[5]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent pointer-events-none z-[5]" />
                     <div className="absolute inset-0 z-[6]" />
                     <button
                       onClick={onClose}
@@ -277,11 +298,24 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
                       <div className="flex gap-2 md:gap-3">
                         <Button
                           size="lg"
-                          className="bg-white text-black hover:bg-white/90 font-semibold px-4 md:px-6 text-sm md:text-base"
+                          className={`font-semibold px-4 md:px-6 text-sm md:text-base ${
+                            hasAccess
+                              ? "bg-white text-black hover:bg-white/90"
+                              : "bg-[#ffc34f] text-black hover:bg-[#ffc34f]/90"
+                          }`}
                           onClick={handlePlay}
                         >
-                          <Play className="w-4 h-4 md:w-5 md:h-5 mr-2 fill-current" />
-                          {t("watch")}
+                          {hasAccess ? (
+                            <>
+                              <Play className="w-4 h-4 md:w-5 md:h-5 mr-2 fill-current" />
+                              {t("watch")}
+                            </>
+                          ) : (
+                            <>
+                              <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                              Subscribe to Watch
+                            </>
+                          )}
                         </Button>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -314,7 +348,7 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-[#18181bc7]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
                     <button
                       onClick={onClose}
                       className="absolute top-4 right-4 p-2 bg-zinc-900/90 hover:bg-zinc-800 rounded-full transition-colors z-10"
@@ -328,11 +362,24 @@ export function NetflixModal({ mediaId, mediaType, isOpen, onClose }: NetflixMod
                       <div className="flex gap-2 md:gap-3">
                         <Button
                           size="lg"
-                          className="bg-white text-black hover:bg-white/90 font-semibold px-4 md:px-6 text-sm md:text-base"
+                          className={`font-semibold px-4 md:px-6 text-sm md:text-base ${
+                            hasAccess
+                              ? "bg-white text-black hover:bg-white/90"
+                              : "bg-[#ffc34f] text-black hover:bg-[#ffc34f]/90"
+                          }`}
                           onClick={handlePlay}
                         >
-                          <Play className="w-4 h-4 md:w-5 md:h-5 mr-2 fill-current" />
-                          {t("watch")}
+                          {hasAccess ? (
+                            <>
+                              <Play className="w-4 h-4 md:w-5 md:h-5 mr-2 fill-current" />
+                              {t("watch")}
+                            </>
+                          ) : (
+                            <>
+                              <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                              Subscribe to Watch
+                            </>
+                          )}
                         </Button>
                         <Tooltip>
                           <TooltipTrigger asChild>

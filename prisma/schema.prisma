@@ -22,6 +22,11 @@ model User {
   isAdmin   Boolean   @default(false)
   isSetupComplete  Boolean @default(false)
   isVip  Boolean @default(false)
+  subscriptionPlan String? // "monthly" | "quarterly" | "yearly"
+  subscriptionStatus String @default("inactive") // "active" | "inactive" | "expired" | "cancelled"
+  subscriptionStartDate DateTime?
+  subscriptionEndDate DateTime?
+  subscriptionRenewable Boolean @default(true)
   playlists Playlist[]
   movieWatchlist MovieWatchlist[]
   seriesWatchlist SeriesWatchlist[]

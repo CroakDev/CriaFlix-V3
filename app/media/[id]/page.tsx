@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Heart, Plus, ChevronRight } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Heart, Plus, ChevronRight, Lock, Crown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import TmdbApi from "@/lib/TmdbApi"
@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useToast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import SubscriptionBlockModal from "@/app/components/SubscriptionBlockModal"
 
 interface MediaInfo {
   id: number
@@ -72,10 +73,15 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null)
   const [loadingEpisodes, setLoadingEpisodes] = useState(false)
+  const [hasAccess, setHasAccess] = useState(true)
+  const [blockReason, setBlockReason] = useState<"subscription_expired" | "no_subscription" | "subscription_cancelled">(
+    "no_subscription",
+  )
+  const [showBlockModal, setShowBlockModal] = useState(false)
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<Date | null>(null)
 
   const { data: session, status } = useSession()
   const { toast } = useToast()
-
   const searchParams = useSearchParams()
   const mediaType = searchParams.get("mediaType") || "movie"
 
@@ -109,7 +115,7 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
     }
 
     fetchMediaDetails()
-  }, [params.id, mediaType])
+  }, [params.id])
 
   useEffect(() => {
     const fetchEpisodes = async () => {
@@ -137,7 +143,7 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
     }
 
     fetchEpisodes()
-  }, [selectedSeason, mediaType, params.id])
+  }, [selectedSeason, params.id])
 
   useEffect(() => {
     const checkFavorites = async () => {
@@ -162,7 +168,29 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
     }
 
     checkFavorites()
-  }, [session, media, params.id, mediaType])
+  }, [session, media, params.id])
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (status === "authenticated") {
+        try {
+          const res = await fetch("/api/subscription/check")
+          const data = await res.json()
+
+          setHasAccess(data.hasAccess)
+          if (!data.hasAccess) {
+            setBlockReason(data.reason)
+            setSubscriptionEndDate(data.expiresAt ? new Date(data.expiresAt) : null)
+            setShowBlockModal(true)
+          }
+        } catch (error) {
+          console.error("Error checking subscription:", error)
+        }
+      }
+    }
+
+    checkSubscription()
+  }, [status])
 
   const serverData = media
     ? {
@@ -300,257 +328,285 @@ export default function MediaDetailPage({ params }: { params: { id: string } }) 
   if (!media) return <div>Media not found</div>
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 max-w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div className="lg:col-span-2 xl:col-span-3">
-          <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-            <ServerSelection
-              {...serverData}
-              episodeKey={
-                selectedEpisode ? `s${selectedEpisode.season_number}e${selectedEpisode.episode_number}` : undefined
-              }
-              onEnded={mediaType === "tv" ? goToNextEpisode : undefined}
-            />
-          </div>
+    <>
+      <SubscriptionBlockModal
+        open={showBlockModal}
+        onOpenChange={setShowBlockModal}
+        reason={blockReason}
+        expiresAt={subscriptionEndDate}
+      />
 
-          {mediaType === "tv" && selectedEpisode && (
-            <div className="mt-4 bg-secondary/50 rounded-lg p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold">
-                    T{selectedEpisode.season_number}E{selectedEpisode.episode_number}: {selectedEpisode.name}
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">{selectedEpisode.overview}</p>
+      <div className="container mx-auto px-2 sm:px-4 max-w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="lg:col-span-2 xl:col-span-3">
+            {!hasAccess ? (
+              <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center relative">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                <div className="relative z-10 text-center p-8">
+                  <Lock className="w-16 h-16 mx-auto mb-4 text-primary" />
+                  <h3 className="text-2xl font-bold mb-2">VIP Subscription Required</h3>
+                  <p className="text-muted-foreground mb-4">This content is only available to VIP subscribers</p>
+                  <Button
+                    size="lg"
+                    className="bg-[#ffc34f] text-black hover:bg-[#ffc34f]/90"
+                    onClick={() => setShowBlockModal(true)}
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Subscribe Now
+                  </Button>
                 </div>
-                <Button onClick={goToNextEpisode} size="lg" className="flex-shrink-0">
-                  Próximo Episódio
-                  <ChevronRight className="w-4 h-4 ml-2" />
+              </div>
+            ) : (
+              <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                <ServerSelection
+                  {...serverData}
+                  episodeKey={
+                    selectedEpisode ? `s${selectedEpisode.season_number}e${selectedEpisode.episode_number}` : undefined
+                  }
+                  onEnded={mediaType === "tv" ? goToNextEpisode : undefined}
+                />
+              </div>
+            )}
+
+            {mediaType === "tv" && selectedEpisode && (
+              <div className="mt-4 bg-secondary/50 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold">
+                      T{selectedEpisode.season_number}E{selectedEpisode.episode_number}: {selectedEpisode.name}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedEpisode.overview}</p>
+                  </div>
+                  <Button onClick={goToNextEpisode} size="lg" className="flex-shrink-0">
+                    Próximo Episódio
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <h1 className="text-2xl font-bold mt-4">{media.title || media.name}</h1>
+
+            <div className="flex flex-wrap items-center justify-between ">
+              <p className="text-gray-500 text-sm">
+                {media.revenue?.toLocaleString("en-US")} views •
+                <span className="ml-1">
+                  {media.release_date || media.first_air_date
+                    ? formatDistanceToNow(new Date(media.release_date || (media.first_air_date as string)), {
+                        locale: ptBR,
+                        addSuffix: true,
+                      })
+                    : "Data não disponível"}
+                </span>
+              </p>
+              <div className="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
+                <Button variant="ghost" size="sm">
+                  <ThumbsUp className="mr-2 h-4 w-4" />
+                  +1k
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <ThumbsDown className="mr-2 h-4 w-4" />
+                  Dislike
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <Share2 className=" h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          )}
+            <div className="flex items-center justify-between mt-4 pb-4 border-b">
+              <div className="flex items-center space-x-2">
+                {media.production_companies && media.production_companies.length > 0 ? (
+                  <Avatar className="w-10 h-10 bg-primary flex items-center justify-center">
+                    <AvatarImage
+                      src={
+                        media.production_companies[0].logo_path
+                          ? `https://image.tmdb.org/t/p/w500${media.production_companies[0].logo_path}`
+                          : "/placeholder-user.jpg"
+                      }
+                      alt={media.production_companies[0].name}
+                      className="object-contain w-6 h-6 invert brightness-0"
+                    />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {media.production_companies[0].name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Avatar className="w-10 h-10 bg-primary flex items-center justify-center">
+                    <AvatarImage
+                      src="/placeholder-user.jpg"
+                      alt="Channel"
+                      className="object-contain w-6 h-6 invert brightness-0"
+                    />
+                    <AvatarFallback className="bg-primary text-primary-foreground">CN</AvatarFallback>
+                  </Avatar>
+                )}
 
-          <h1 className="text-2xl font-bold mt-4">{media.title || media.name}</h1>
-
-          <div className="flex flex-wrap items-center justify-between ">
-            <p className="text-gray-500 text-sm">
-              {media.revenue?.toLocaleString("en-US")} views •
-              <span className="ml-1">
-                {media.release_date || media.first_air_date
-                  ? formatDistanceToNow(new Date(media.release_date || (media.first_air_date as string)), {
-                      locale: ptBR,
-                      addSuffix: true,
-                    })
-                  : "Data não disponível"}
-              </span>
-            </p>
-            <div className="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0">
-              <Button variant="ghost" size="sm">
-                <ThumbsUp className="mr-2 h-4 w-4" />
-                +1k
-              </Button>
-              <Button variant="ghost" size="sm">
-                <ThumbsDown className="mr-2 h-4 w-4" />
-                Dislike
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Share2 className=" h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between mt-4 pb-4 border-b">
-            <div className="flex items-center space-x-2">
-              {media.production_companies && media.production_companies.length > 0 ? (
-                <Avatar className="w-10 h-10 bg-primary flex items-center justify-center">
-                  <AvatarImage
-                    src={
-                      media.production_companies[0].logo_path
-                        ? `https://image.tmdb.org/t/p/w500${media.production_companies[0].logo_path}`
-                        : "/placeholder-user.jpg"
-                    }
-                    alt={media.production_companies[0].name}
-                    className="object-contain w-6 h-6 invert brightness-0"
-                  />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {media.production_companies[0].name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <Avatar className="w-10 h-10 bg-primary flex items-center justify-center">
-                  <AvatarImage
-                    src="/placeholder-user.jpg"
-                    alt="Channel"
-                    className="object-contain w-6 h-6 invert brightness-0"
-                  />
-                  <AvatarFallback className="bg-primary text-primary-foreground">CN</AvatarFallback>
-                </Avatar>
-              )}
-
-              <div>
-                <h2 className="font-semibold">
-                  {media.production_companies && media.production_companies.length > 0
-                    ? media.production_companies[0].name
-                    : "Channel Name"}
-                </h2>
-              </div>
-            </div>
-            <Button variant={isInFavorites ? "outline" : "default"} onClick={toggleFavorites}>
-              {isInFavorites ? (
-                <>
-                  <Heart className="h-4 w-4 mr-2 fill-current" />
-                  Nos Favoritos
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar aos Favoritos
-                </>
-              )}
-            </Button>
-          </div>
-          <div className="mt-4">
-            <p className="text-sm text-gray-700">{media.overview}</p>
-          </div>
-
-          {mediaType === "tv" && (
-            <div className="mt-8 bg-secondary rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-2xl font-bold">Episódios</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {seasons.find((s) => s.season_number === selectedSeason)?.overview || "Selecione uma temporada"}
-                  </p>
+                  <h2 className="font-semibold">
+                    {media.production_companies && media.production_companies.length > 0
+                      ? media.production_companies[0].name
+                      : "Channel Name"}
+                  </h2>
+                </div>
+              </div>
+              <Button variant={isInFavorites ? "outline" : "default"} onClick={toggleFavorites}>
+                {isInFavorites ? (
+                  <>
+                    <Heart className="h-4 w-4 mr-2 fill-current" />
+                    Nos Favoritos
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar aos Favoritos
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="mt-4">
+              <p className="text-sm text-gray-700">{media.overview}</p>
+            </div>
+
+            {mediaType === "tv" && (
+              <div className="mt-8 bg-secondary rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold">Episódios</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {seasons.find((s) => s.season_number === selectedSeason)?.overview || "Selecione uma temporada"}
+                    </p>
+                  </div>
+
+                  <Select value={selectedSeason.toString()} onValueChange={(value) => setSelectedSeason(Number(value))}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Selecione a temporada" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {seasons.map((season) => (
+                        <SelectItem key={season.id} value={season.season_number.toString()}>
+                          Temporada {season.season_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <Select value={selectedSeason.toString()} onValueChange={(value) => setSelectedSeason(Number(value))}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Selecione a temporada" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasons.map((season) => (
-                      <SelectItem key={season.id} value={season.season_number.toString()}>
-                        Temporada {season.season_number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <Separator className="mb-6" />
 
-              <Separator className="mb-6" />
-
-              {loadingEpisodes ? (
-                <div className="text-center py-8">Carregando episódios...</div>
-              ) : (
-                <div className="space-y-3">
-                  {episodes.map((episode) => (
-                    <div
-                      key={episode.id}
-                      className={`flex items-start gap-4 p-3 hover:bg-background/80 rounded-lg cursor-pointer transition-colors ${
-                        selectedEpisode?.episode_number === episode.episode_number
-                          ? "bg-background border-2 border-primary"
-                          : ""
-                      }`}
-                      onClick={() => handleEpisodeSelect(episode)}
-                    >
-                      <div className="relative w-40 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                        {episode.still_path ? (
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w300${episode.still_path}`}
-                            alt={episode.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                            Sem imagem
+                {loadingEpisodes ? (
+                  <div className="text-center py-8">Carregando episódios...</div>
+                ) : (
+                  <div className="space-y-3">
+                    {episodes.map((episode) => (
+                      <div
+                        key={episode.id}
+                        className={`flex items-start gap-4 p-3 hover:bg-background/80 rounded-lg cursor-pointer transition-colors ${
+                          selectedEpisode?.episode_number === episode.episode_number
+                            ? "bg-background border-2 border-primary"
+                            : ""
+                        }`}
+                        onClick={() => handleEpisodeSelect(episode)}
+                      >
+                        <div className="relative w-40 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                          {episode.still_path ? (
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w300${episode.still_path}`}
+                              alt={episode.name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                              Sem imagem
+                            </div>
+                          )}
+                          <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-2 py-0.5 rounded">
+                            {episode.runtime || 0}min
                           </div>
-                        )}
-                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-2 py-0.5 rounded">
-                          {episode.runtime || 0}min
                         </div>
-                      </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-sm line-clamp-1">
-                            {episode.episode_number}. {episode.name}
-                          </h4>
-                          {episode.vote_average > 0 && (
-                            <Badge variant="outline" className="flex-shrink-0">
-                              ⭐ {episode.vote_average.toFixed(1)}
-                            </Badge>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-semibold text-sm line-clamp-1">
+                              {episode.episode_number}. {episode.name}
+                            </h4>
+                            {episode.vote_average > 0 && (
+                              <Badge variant="outline" className="flex-shrink-0">
+                                ⭐ {episode.vote_average.toFixed(1)}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                            {episode.overview || "Sem descrição disponível."}
+                          </p>
+                          {episode.air_date && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Lançamento: {new Date(episode.air_date).toLocaleDateString("pt-BR")}
+                            </p>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                          {episode.overview || "Sem descrição disponível."}
-                        </p>
-                        {episode.air_date && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Lançamento: {new Date(episode.air_date).toLocaleDateString("pt-BR")}
-                          </p>
-                        )}
+
+                        <Button
+                          size="sm"
+                          variant={selectedEpisode?.episode_number === episode.episode_number ? "default" : "outline"}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEpisodeSelect(episode)
+                          }}
+                        >
+                          {selectedEpisode?.episode_number === episode.episode_number ? "Assistindo" : "Assistir"}
+                        </Button>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-                      <Button
-                        size="sm"
-                        variant={selectedEpisode?.episode_number === episode.episode_number ? "default" : "outline"}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEpisodeSelect(episode)
-                        }}
-                      >
-                        {selectedEpisode?.episode_number === episode.episode_number ? "Assistindo" : "Assistir"}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-4">Comments</h3>
-            <div className="flex items-center space-x-4 mb-4">
-              <Avatar>
-                <AvatarImage src={session?.user?.image || ""} alt="User" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-              <Input placeholder="Add a comment..." className="flex-grow" />
-            </div>
-            <div className="flex space-x-4 mt-4">
-              <Avatar>
-                <AvatarImage src="https://i.imgur.com/qXRRHKA.png" alt="Commenter" />
-                <AvatarFallback>C</AvatarFallback>
-              </Avatar>
-              <div>
-                <h4 className="font-semibold">
-                  CriaFlix Group <span className="bg-primary rounded text-[11px] text-background p-[4px]">Admin</span>
-                </h4>
-                <p className="text-sm text-gray-400 mt-1">
-                  This feature is still being tested, wait a little longer...
-                </p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <Button variant="ghost" size="sm">
-                    <ThumbsUp className="mr-2 h-3 w-3" />
-                    42
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <ThumbsDown className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-sm">
-                    Reply
-                  </Button>
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4">Comments</h3>
+              <div className="flex items-center space-x-4 mb-4">
+                <Avatar>
+                  <AvatarImage src={session?.user?.image || ""} alt="User" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+                <Input placeholder="Add a comment..." className="flex-grow" />
+              </div>
+              <div className="flex space-x-4 mt-4">
+                <Avatar>
+                  <AvatarImage src="https://i.imgur.com/qXRRHKA.png" alt="Commenter" />
+                  <AvatarFallback>C</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="font-semibold">
+                    CriaFlix Group <span className="bg-primary rounded text-[11px] text-background p-[4px]">Admin</span>
+                  </h4>
+                  <p className="text-sm text-gray-400 mt-1">
+                    This feature is still being tested, wait a little longer...
+                  </p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Button variant="ghost" size="sm">
+                      <ThumbsUp className="mr-2 h-3 w-3" />
+                      42
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <ThumbsDown className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-sm">
+                      Reply
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <Recommended movieId={media.id} mediaType={mediaType} />
+          <Recommended movieId={media.id} mediaType={mediaType} />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -29,6 +29,11 @@ import {
   Heart,
   Clock,
   Star,
+  CreditCard,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
 } from "lucide-react"
 
 export default function ProfilePage() {
@@ -37,6 +42,20 @@ export default function ProfilePage() {
   const [isVip, setIsVip] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+
+  const [subscription, setSubscription] = useState<{
+    subscriptionPlan: string | null
+    subscriptionStatus: string
+    subscriptionStartDate: Date | null
+    subscriptionEndDate: Date | null
+    subscriptionRenewable: boolean
+  }>({
+    subscriptionPlan: null,
+    subscriptionStatus: "inactive",
+    subscriptionStartDate: null,
+    subscriptionEndDate: null,
+    subscriptionRenewable: true,
+  })
 
   // User preferences state
   const [preferences, setPreferences] = useState({
@@ -71,8 +90,21 @@ export default function ProfilePage() {
         try {
           const res = await fetch("/api/user-info")
           if (res.ok) {
-            const data = await res.json()
-            setIsVip(data.isVip)
+            const data = await fetch("/api/subscription")
+            const subscriptionData = await data.json()
+
+            setIsVip(subscriptionData.isVip)
+            setSubscription({
+              subscriptionPlan: subscriptionData.subscriptionPlan,
+              subscriptionStatus: subscriptionData.subscriptionStatus,
+              subscriptionStartDate: subscriptionData.subscriptionStartDate
+                ? new Date(subscriptionData.subscriptionStartDate)
+                : null,
+              subscriptionEndDate: subscriptionData.subscriptionEndDate
+                ? new Date(subscriptionData.subscriptionEndDate)
+                : null,
+              subscriptionRenewable: subscriptionData.subscriptionRenewable,
+            })
 
             // Load user preferences from localStorage or API
             const savedPrefs = localStorage.getItem("userPreferences")
@@ -116,6 +148,117 @@ export default function ProfilePage() {
       setPreferences(JSON.parse(savedPrefs))
     }
     setIsEditing(false)
+  }
+
+  const handleRenewSubscription = async () => {
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: subscription.subscriptionPlan || "monthly",
+          action: "renew",
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        toast.success("Subscription renewed successfully!")
+        // Reload subscription data
+        window.location.reload()
+      } else {
+        toast.error("Failed to renew subscription")
+      }
+    } catch (error) {
+      console.error("Error renewing subscription:", error)
+      toast.error("An error occurred")
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!confirm("Are you sure you want to cancel your subscription? You'll still have access until the end date.")) {
+      return
+    }
+
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel" }),
+      })
+
+      if (res.ok) {
+        toast.success("Subscription cancelled. You can still use premium features until the end date.")
+        window.location.reload()
+      } else {
+        toast.error("Failed to cancel subscription")
+      }
+    } catch (error) {
+      console.error("Error cancelling subscription:", error)
+      toast.error("An error occurred")
+    }
+  }
+
+  const getDaysRemaining = () => {
+    if (!subscription.subscriptionEndDate) return 0
+    const now = new Date()
+    const diff = subscription.subscriptionEndDate.getTime() - now.getTime()
+    return Math.ceil(diff / (1000 * 60 * 60 * 24))
+  }
+
+  const getSubscriptionStatusBadge = () => {
+    const daysRemaining = getDaysRemaining()
+
+    switch (subscription.subscriptionStatus) {
+      case "active":
+        if (daysRemaining <= 7) {
+          return (
+            <Badge variant="outline" className="border-yellow-500 text-yellow-500">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              Expiring Soon
+            </Badge>
+          )
+        }
+        return (
+          <Badge variant="outline" className="border-green-500 text-green-500">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Active
+          </Badge>
+        )
+      case "expired":
+        return (
+          <Badge variant="outline" className="border-red-500 text-red-500">
+            <XCircle className="w-3 h-3 mr-1" />
+            Expired
+          </Badge>
+        )
+      case "cancelled":
+        return (
+          <Badge variant="outline" className="border-orange-500 text-orange-500">
+            <XCircle className="w-3 h-3 mr-1" />
+            Cancelled
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="outline" className="border-gray-500 text-gray-500">
+            Inactive
+          </Badge>
+        )
+    }
+  }
+
+  const getPlanName = () => {
+    switch (subscription.subscriptionPlan) {
+      case "monthly":
+        return "Monthly Plan"
+      case "quarterly":
+        return "Quarterly Plan"
+      case "yearly":
+        return "Yearly Plan"
+      default:
+        return "No Plan"
+    }
   }
 
   if (loading || status === "loading") {
@@ -249,10 +392,14 @@ export default function ProfilePage() {
 
       {/* Settings Tabs */}
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[800px]">
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
             Profile
+          </TabsTrigger>
+          <TabsTrigger value="subscription" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            Subscription
           </TabsTrigger>
           <TabsTrigger value="preferences" className="gap-2">
             <Settings className="h-4 w-4" />
@@ -316,6 +463,169 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="subscription" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-[#ffc34f]" />
+                Subscription Management
+              </CardTitle>
+              <CardDescription>Manage your VIP subscription and billing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Current Subscription Status */}
+              <div className="bg-card/50 border border-border rounded-lg p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Current Plan</h3>
+                    <p className="text-muted-foreground text-sm">{getPlanName()}</p>
+                  </div>
+                  {getSubscriptionStatusBadge()}
+                </div>
+
+                <Separator />
+
+                {isVip && subscription.subscriptionStatus === "active" ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Start Date:</span>
+                      <span className="text-sm font-medium">
+                        {subscription.subscriptionStartDate?.toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">End Date:</span>
+                      <span className="text-sm font-medium">
+                        {subscription.subscriptionEndDate?.toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Days Remaining:</span>
+                      <span className="text-sm font-bold text-primary">{getDaysRemaining()} days</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Auto-Renewal:</span>
+                      <span className="text-sm font-medium">
+                        {subscription.subscriptionRenewable ? "Enabled" : "Disabled"}
+                      </span>
+                    </div>
+
+                    {getDaysRemaining() <= 7 && (
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
+                            Your subscription is expiring soon!
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Renew now to continue enjoying premium features without interruption.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : subscription.subscriptionStatus === "expired" ? (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                          Your subscription has expired
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Renew your subscription to regain access to premium content and features.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : subscription.subscriptionStatus === "cancelled" ? (
+                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                          Subscription Cancelled
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          You can still use premium features until{" "}
+                          {subscription.subscriptionEndDate?.toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-muted/50 rounded-lg p-4 text-center">
+                    <p className="text-sm text-muted-foreground">You don't have an active subscription</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {isVip &&
+                  (subscription.subscriptionStatus === "active" || subscription.subscriptionStatus === "cancelled") && (
+                    <Button onClick={handleRenewSubscription} className="flex-1 gap-2">
+                      <RefreshCw className="h-4 w-4" />
+                      Renew Subscription
+                    </Button>
+                  )}
+
+                {!isVip || subscription.subscriptionStatus === "expired" ? (
+                  <Button className="flex-1 bg-[#ffc34f] text-black hover:bg-[#ffc34f]/90 gap-2">
+                    <Crown className="h-4 w-4" />
+                    Subscribe Now
+                  </Button>
+                ) : null}
+
+                {isVip && subscription.subscriptionStatus === "active" && subscription.subscriptionRenewable && (
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelSubscription}
+                    className="flex-1 text-destructive hover:text-destructive bg-transparent gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel Subscription
+                  </Button>
+                )}
+              </div>
+
+              {/* Subscription Benefits */}
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 space-y-3">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-[#ffc34f]" />
+                  VIP Benefits
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Ad-free viewing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>4K & Full HD quality</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Early access to releases</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Priority support 24/7</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Offline downloads</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Premium servers access</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

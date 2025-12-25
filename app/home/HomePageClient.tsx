@@ -52,7 +52,7 @@ function HomePageClient() {
   }, [session, status, router])
 
   return (
-    <div >
+    <div>
       <FeaturedBanner />
       <MediaList2 />
     </div>

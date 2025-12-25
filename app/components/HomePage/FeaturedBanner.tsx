@@ -184,7 +184,7 @@ function FeaturedBanner() {
           <div
             className="w-full h-full blur-[120px] animate-pulse-slow"
             style={{
-              background: `radial-gradient(ellipse at center, ${ambientColor} 0%, transparent 90%)`,
+              background: `radial-gradient(ellipse at center, ${ambientColor} 0%, transparent 70%)`,
               animationDuration: "4s",
             }}
           />

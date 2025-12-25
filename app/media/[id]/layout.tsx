@@ -14,7 +14,7 @@ function RootLayout({ children, session }: { children: React.ReactNode; session?
         <NavbarComponent />
         <div className="flex flex-1 overflow-hidden">
           <SidebarMenu />
-          <main className="flex-1 ml-48 p-4 pt-16 overflow-auto">{children}</main>
+          <main className="flex-1 ml-48 p-4 overflow-auto">{children}</main>
         </div>
       </SessionProvider>
     </div>

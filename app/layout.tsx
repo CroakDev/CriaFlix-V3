@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   },
   description:
     "Discover and stream your favorite movies and TV series. Create playlists, save favorites, and get personalized recommendations on CriaFlix.",
+
+  applicationName: "CriaFlix",
+
   keywords: [
     "streaming",
     "movies",
@@ -25,8 +28,20 @@ export const metadata: Metadata = {
     "filmes",
     "séries",
   ],
+
   authors: [{ name: "CriaFlix Team" }],
   creator: "CriaFlix",
+
+  manifest: "/manifest.json",
+
+  themeColor: "#111316",
+
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+
   openGraph: {
     type: "website",
     locale: "pt_BR",
@@ -37,36 +52,27 @@ export const metadata: Metadata = {
     siteName: "CriaFlix",
     images: [
       {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
+        url: "/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
         alt: "CriaFlix - Your Streaming Platform",
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
     title: "CriaFlix - Stream Movies & TV Series",
     description:
       "Discover and stream your favorite movies and TV series. Create playlists, save favorites, and get personalized recommendations.",
-    images: ["/twitter-image.jpg"],
+    images: ["/android-chrome-512x512.png"],
     creator: "@criaflix",
   },
+
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
   },
-  verification: {
-    google: "google-site-verification-code",
-  },
-    generator: 'v0.app'
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

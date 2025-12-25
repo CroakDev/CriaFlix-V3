@@ -176,7 +176,7 @@ export default function FavoritesPage() {
 
       <div className="container mx-auto px-4">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-4 sm:gap-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <MediaCardSkeleton key={i} />
             ))}
@@ -203,7 +203,7 @@ export default function FavoritesPage() {
             </Button>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-1 sm:gap-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             <AnimatePresence mode="popLayout">
               {filteredMedia.map((item, index) => {
                 const title = item.title || item.name || "Untitled"

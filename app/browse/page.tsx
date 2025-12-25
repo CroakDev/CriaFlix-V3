@@ -320,7 +320,7 @@ export default function BrowsePage() {
 
       <div className="container mx-auto px-2 sm:px-4 py-8">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {Array.from({ length: 18 }).map((_, i) => (
               <div key={i} className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
             ))}
@@ -331,7 +331,7 @@ export default function BrowsePage() {
             <p className="text-sm text-muted-foreground">{t("noResultsDescription")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-2 gap-4 sm:gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {filteredMedia.map((item, index) => {
               const isInFavorites = favoritesIds.has(item.id)
               const year = item.release_date?.split("-")[0] || item.first_air_date?.split("-")[0]
