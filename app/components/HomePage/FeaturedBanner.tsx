@@ -10,6 +10,8 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import Image from "next/image"
+import { useSession } from "next-auth/react"
+import { useToast } from "@/components/ui/use-toast"
 
 interface MediaItem {
   id: number
@@ -36,8 +38,11 @@ function FeaturedBanner() {
   const [error, setError] = useState<string | null>(null)
   const [isAdded, setIsAdded] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [ambientColor, setAmbientColor] = useState<string>("rgba(0, 0, 0, 0)")
   const featm = useTranslations("FeaturedMidia")
   const { theme } = useTheme()
+  const { data: session } = useSession()
+  const { toast } = useToast()
 
   useEffect(() => {
     const loadRandomMedia = async () => {
@@ -53,6 +58,20 @@ function FeaturedBanner() {
 
           const details = await TmdbApi.getMediaInfo(selectedMedia.id, selectedMedia.media_type)
           setMediaDetails(details)
+
+          if (session) {
+            try {
+              const favResponse = await fetch("/api/favorites")
+              const favData = await favResponse.json()
+              const isFavorited =
+                selectedMedia.media_type === "movie"
+                  ? favData.movies?.some((m: any) => m.movieId === selectedMedia.id)
+                  : favData.series?.some((s: any) => s.seriesId === selectedMedia.id)
+              setIsAdded(isFavorited)
+            } catch (err) {
+              console.error("Error checking favorites:", err)
+            }
+          }
         } else {
           throw new Error("No featured media available")
         }
@@ -65,18 +84,61 @@ function FeaturedBanner() {
     }
 
     loadRandomMedia()
-  }, [])
+  }, [session])
 
-  const handleAddToList = () => {
-    setIsAdded(!isAdded)
-    // Here you would typically call an API to actually add/remove the media from the user's list
+  const handleAddToList = async () => {
+    if (!session) {
+      toast({
+        title: "Login required",
+        description: "Please log in to add to favorites",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!featuredMedia) return
+
+    try {
+      const response = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: featuredMedia.media_type,
+          id: featuredMedia.id,
+          title: featuredMedia.title || featuredMedia.name,
+          posterPath: featuredMedia.backdrop_path,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.action === "added") {
+        setIsAdded(true)
+        toast({
+          title: "Added",
+          description: `${featuredMedia.title || featuredMedia.name} was added to favorites`,
+        })
+      } else {
+        setIsAdded(false)
+        toast({
+          title: "Removed",
+          description: `${featuredMedia.title || featuredMedia.name} was removed from favorites`,
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Unable to update favorites",
+        variant: "destructive",
+      })
+    }
   }
 
   if (isLoading) {
     return (
-      <div className="relative h-[60vh] overflow-hidden rounded-lg mb-10 bg-secondary/10 animate-pulse">
+      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden rounded-lg mb-10 bg-secondary/10 animate-pulse">
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-background/50" />
-        <div className="absolute bottom-0 left-0 p-8 space-y-4">
+        <div className="absolute bottom-0 left-0 p-4 md:p-8 space-y-4">
           <div className="h-8 w-64 bg-secondary/20 rounded"></div>
           <div className="h-4 w-full bg-secondary/20 rounded"></div>
           <div className="h-4 w-3/4 bg-secondary/20 rounded"></div>
@@ -91,7 +153,7 @@ function FeaturedBanner() {
 
   if (error) {
     return (
-      <div className="relative h-[60vh] overflow-hidden rounded-lg mb-10 bg-secondary/10 flex items-center justify-center">
+      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden rounded-lg mb-10 bg-secondary/10 flex items-center justify-center">
         <p className="text-center text-muted-foreground">{error}</p>
       </div>
     )
@@ -116,119 +178,161 @@ function FeaturedBanner() {
 
   return (
     <AnimatePresence>
-      <motion.section
-        className="relative h-[60vh] overflow-hidden rounded-lg mb-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {featuredMedia.backdrop_path && (
-          <motion.div
-            className="absolute inset-0"
-            initial={{ scale: 1.1 }}
-            animate={{ scale: imageLoaded ? 1 : 1.1 }}
-            transition={{ duration: 10, ease: "linear" }}
-          >
-            <Image
-              src={`https://image.tmdb.org/t/p/original${featuredMedia.backdrop_path}`}
-              alt={featuredMedia.title || featuredMedia.name || "Featured media"}
-              layout="fill"
-              objectFit="cover"
-              className={`transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-              onLoad={() => setImageLoaded(true)}
-              priority
-            />
-          </motion.div>
-        )}
-        <motion.div
-          className={`absolute inset-0 bg-gradient-to-t ${
-            theme === "dark" ? "from-background/90 to-background/30" : "from-white/90 to-white/30"
-          }`}
+      <div className="relative mb-10">
+        {/* Ambient light container - behind image but above background */}
+        <div className="absolute left-1/2 top-[10vh] -translate-x-1/2 w-[600px] h-[600px] pointer-events-none z-[5] overflow-visible">
+          <div
+            className="w-full h-full blur-[120px] animate-pulse-slow"
+            style={{
+              background: `radial-gradient(ellipse at center, ${ambientColor} 0%, transparent 90%)`,
+              animationDuration: "4s",
+            }}
+          />
+        </div>
+
+        <motion.section
+          className="relative h-[50vh] md:h-[60vh] overflow-hidden rounded-lg z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-        />
-        <div className="absolute bottom-0 left-0 p-8 max-w-2xl">
-          <motion.h2
-            className="text-4xl font-bold mb-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {featuredMedia.title || featuredMedia.name}
-          </motion.h2>
-          <motion.p
-            className="text-sm text-muted-foreground mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {featuredMedia.overview || "No description available."}
-          </motion.p>
-          <motion.div
-            className="flex flex-wrap items-center gap-4 mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="flex flex-wrap gap-2">
-              {genres.map((genre, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="bg-primary/10 text-primary backdrop-blur-md rounded-sm border-none"
-                >
-                  {genre}
-                </Badge>
-              ))}
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-primary text-sm flex items-center bg-primary/10 px-2 py-1 backdrop-blur-md rounded-sm border-none">
-                <Star className="h-4 w-4 mr-1 text-yellow-400" />
-                {formattedVoteAverage}
-              </span>
-              <span className="text-primary text-sm flex items-center bg-primary/10 px-2 py-1 backdrop-blur-md rounded-sm border-none">
-                <Clock className="h-4 w-4 mr-1" />
-                {runtime}
-              </span>
-              <span className="text-primary text-sm flex items-center bg-primary/10 px-2 py-1 backdrop-blur-md rounded-sm border-none">
-                <Calendar className="h-4 w-4 mr-1" />
-                {releaseYear}
-              </span>
-            </div>
-          </motion.div>
-          <motion.div
-            className="flex items-center space-x-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Link href={`/media/${featuredMedia.id}?mediaType=${featuredMedia.media_type}`} className="block group">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-300 flex items-center">
-                <Play className="mr-2 h-4 w-4" /> {featm("btwath")}
-              </Button>
-            </Link>
-            <motion.div whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="secondary"
-                className="transition-colors duration-300 flex items-center bg-gray-400/15 backdrop-blur-sm border-gray-400"
-                onClick={handleAddToList}
-              >
-                {isAdded ? (
-                  <>
-                    <Check className="mr-2 h-4 w-4" /> {featm("btadded")}
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" /> {featm("btaddwl")}
-                  </>
-                )}
-              </Button>
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {featuredMedia.backdrop_path && (
+            <motion.div
+              className="absolute inset-0 z-20 rounded-lg overflow-hidden"
+              initial={{ scale: 1.1 }}
+              animate={{ scale: imageLoaded ? 1 : 1.1 }}
+              transition={{ duration: 10, ease: "linear" }}
+            >
+              <Image
+                src={`https://image.tmdb.org/t/p/original${featuredMedia.backdrop_path}`}
+                alt={featuredMedia.title || featuredMedia.name || "Featured media"}
+                layout="fill"
+                objectFit="cover"
+                className={`transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                onLoad={(e) => {
+                  setImageLoaded(true)
+                  const img = e.currentTarget as HTMLImageElement
+                  const canvas = document.createElement("canvas")
+                  const ctx = canvas.getContext("2d")
+                  if (ctx) {
+                    canvas.width = img.naturalWidth
+                    canvas.height = img.naturalHeight
+                    ctx.drawImage(img, 0, 0)
+                    try {
+                      const imageData = ctx.getImageData(0, canvas.height / 2, canvas.width, canvas.height / 2)
+                      const data = imageData.data
+                      let r = 0,
+                        g = 0,
+                        b = 0
+                      for (let i = 0; i < data.length; i += 4) {
+                        r += data[i]
+                        g += data[i + 1]
+                        b += data[i + 2]
+                      }
+                      const pixelCount = data.length / 4
+                      r = Math.floor(r / pixelCount)
+                      g = Math.floor(g / pixelCount)
+                      b = Math.floor(b / pixelCount)
+                      setAmbientColor(`rgba(${r}, ${g}, ${b}, 0.4)`)
+                    } catch (error) {
+                      console.error("Error extracting color:", error)
+                    }
+                  }
+                }}
+                priority
+              />
             </motion.div>
-          </motion.div>
-        </div>
-      </motion.section>
+          )}
+          <motion.div
+            className={`absolute inset-0 z-30 bg-gradient-to-t ${
+              theme === "dark" ? "from-background/90 to-background/30" : "from-white/90 to-white/30"
+            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          />
+          <div className="absolute bottom-0 left-0 p-4 md:p-8 max-w-2xl z-40">
+            <motion.h2
+              className="text-2xl md:text-4xl font-bold mb-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              {featuredMedia.title || featuredMedia.name}
+            </motion.h2>
+            <motion.p
+              className="text-sm text-muted-foreground mb-4 line-clamp-2 md:line-clamp-3 hidden md:block"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {featuredMedia.overview || "No description available."}
+            </motion.p>
+            <motion.div
+              className="flex flex-wrap items-center gap-2 md:gap-4 mb-3 md:mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="flex flex-wrap gap-2">
+                {genres.slice(0, 3).map((genre, index) => (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className="bg-primary/10 text-primary backdrop-blur-md rounded-sm border-none text-xs"
+                  >
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 md:gap-4">
+                <span className="text-primary text-xs md:text-sm flex items-center bg-primary/10 px-2 py-1 backdrop-blur-md rounded-sm border-none">
+                  <Star className="h-4 w-4 mr-1 text-yellow-400" />
+                  {formattedVoteAverage}
+                </span>
+                <span className="text-primary text-xs md:text-sm flex items-center bg-primary/10 px-2 py-1 backdrop-blur-md rounded-sm border-none">
+                  <Clock className="h-4 w-4 mr-1" />
+                  {runtime}
+                </span>
+                <span className="text-primary text-xs md:text-sm flex items-center bg-primary/10 px-2 py-1 backdrop-blur-md rounded-sm border-none">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {releaseYear}
+                </span>
+              </div>
+            </motion.div>
+            <motion.div
+              className="flex items-center space-x-2 md:space-x-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Link href={`/media/${featuredMedia.id}?mediaType=${featuredMedia.media_type}`} className="block group">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-300 flex items-center text-sm md:text-base px-4 md:px-6">
+                  <Play className="mr-2 h-4 w-4" /> {featm("btwath")}
+                </Button>
+              </Link>
+              <motion.div whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="secondary"
+                  className="transition-colors duration-300 flex items-center bg-gray-400/15 backdrop-blur-sm border-gray-400 text-sm md:text-base px-3 md:px-4"
+                  onClick={handleAddToList}
+                >
+                  {isAdded ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" /> <span className="hidden md:inline">{featm("btadded")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" /> <span className="hidden md:inline">{featm("btaddwl")}</span>
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
+        </motion.section>
+      </div>
     </AnimatePresence>
   )
 }

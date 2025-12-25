@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import MediaCard from "../components/Lists/MediaCard"
+import { useTranslations } from "next-intl"
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "3292348a48f36b094081736c090646ee"
 
@@ -70,7 +71,7 @@ export default function BrowsePage() {
   const [activeTab, setActiveTab] = useState<"movies" | "series">("movies")
   const [media, setMedia] = useState<Media[]>([])
   const [filteredMedia, setFilteredMedia] = useState<Media[]>([])
-  const [watchlistIds, setWatchlistIds] = useState<Set<number>>(new Set())
+  const [favoritesIds, setFavoritesIds] = useState<Set<number>>(new Set())
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedGenre, setSelectedGenre] = useState<string>("all")
   const [selectedYear, setSelectedYear] = useState<string>("all")
@@ -79,29 +80,30 @@ export default function BrowsePage() {
   const [showFilters, setShowFilters] = useState(false)
   const { toast } = useToast()
   const { data: session } = useSession()
+  const t = useTranslations("Browse")
 
   const currentGenres = activeTab === "movies" ? MOVIE_GENRES : TV_GENRES
   const currentYears = Array.from({ length: 30 }, (_, i) => (new Date().getFullYear() - i).toString())
 
   useEffect(() => {
-    const fetchWatchlist = async () => {
+    const fetchFavorites = async () => {
       if (!session) return
 
       try {
-        const response = await fetch("/api/watchlist")
+        const response = await fetch("/api/favorites")
         const data = await response.json()
 
         const ids = new Set<number>()
         data.movies?.forEach((m: any) => ids.add(m.movieId))
         data.series?.forEach((s: any) => ids.add(s.seriesId))
 
-        setWatchlistIds(ids)
+        setFavoritesIds(ids)
       } catch (error) {
-        console.error("Error fetching watchlist:", error)
+        console.error("Error fetching favorites:", error)
       }
     }
 
-    fetchWatchlist()
+    fetchFavorites()
   }, [session])
 
   useEffect(() => {
@@ -168,18 +170,18 @@ export default function BrowsePage() {
     return () => clearTimeout(debounce)
   }, [searchQuery, activeTab])
 
-  const toggleWatchlist = async (item: Media) => {
+  const toggleFavorites = async (item: Media) => {
     if (!session) {
       toast({
         title: "Login necessário",
-        description: "Faça login para adicionar à sua lista",
+        description: "Faça login para adicionar aos favoritos",
         variant: "destructive",
       })
       return
     }
 
     try {
-      const response = await fetch("/api/watchlist", {
+      const response = await fetch("/api/favorites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -193,26 +195,26 @@ export default function BrowsePage() {
       const data = await response.json()
 
       if (data.action === "added") {
-        setWatchlistIds((prev) => new Set(prev).add(item.id))
+        setFavoritesIds((prev) => new Set(prev).add(item.id))
         toast({
           title: "Adicionado",
-          description: `${item.title || item.name} foi adicionado à sua lista`,
+          description: `${item.title || item.name} foi adicionado aos favoritos`,
         })
       } else {
-        setWatchlistIds((prev) => {
+        setFavoritesIds((prev) => {
           const newSet = new Set(prev)
           newSet.delete(item.id)
           return newSet
         })
         toast({
           title: "Removido",
-          description: `${item.title || item.name} foi removido da sua lista`,
+          description: `${item.title || item.name} foi removido dos favoritos`,
         })
       }
     } catch (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar a lista",
+        description: "Não foi possível atualizar os favoritos",
         variant: "destructive",
       })
     }
@@ -233,13 +235,13 @@ export default function BrowsePage() {
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
         <div className="container mx-auto px-2 sm:px-4 py-4 space-y-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
-            <h1 className="text-xl sm:text-2xl font-bold">Navegar</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">{t("title")}</h1>
 
             <div className="flex items-center gap-2">
               <div className="relative w-full max-w-[200px] sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder={`Buscar...`}
+                  placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 text-sm"
@@ -259,8 +261,8 @@ export default function BrowsePage() {
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "movies" | "series")} className="w-full">
             <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="movies">Filmes</TabsTrigger>
-              <TabsTrigger value="series">Séries</TabsTrigger>
+              <TabsTrigger value="movies">{t("movies")}</TabsTrigger>
+              <TabsTrigger value="series">{t("series")}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -268,10 +270,10 @@ export default function BrowsePage() {
             <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/50 rounded-lg animate-in slide-in-from-top-2">
               <Select value={selectedGenre} onValueChange={setSelectedGenre}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Gênero" />
+                  <SelectValue placeholder={t("allGenres")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os gêneros</SelectItem>
+                  <SelectItem value="all">{t("allGenres")}</SelectItem>
                   {currentGenres.map((genre) => (
                     <SelectItem key={genre.id} value={genre.id.toString()}>
                       {genre.name}
@@ -282,10 +284,10 @@ export default function BrowsePage() {
 
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Ano" />
+                  <SelectValue placeholder={t("allYears")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os anos</SelectItem>
+                  <SelectItem value="all">{t("allYears")}</SelectItem>
                   {currentYears.map((year) => (
                     <SelectItem key={year} value={year}>
                       {year}
@@ -296,19 +298,19 @@ export default function BrowsePage() {
 
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Ordenar por" />
+                  <SelectValue placeholder={t("sortBy")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="popularity">Popularidade</SelectItem>
-                  <SelectItem value="rating">Avaliação</SelectItem>
-                  <SelectItem value="release">Lançamento</SelectItem>
+                  <SelectItem value="popularity">{t("popularity")}</SelectItem>
+                  <SelectItem value="rating">{t("rating")}</SelectItem>
+                  <SelectItem value="release">{t("release")}</SelectItem>
                 </SelectContent>
               </Select>
 
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   <X className="w-4 h-4 mr-2" />
-                  Limpar filtros
+                  {t("clearFilters")}
                 </Button>
               )}
             </div>
@@ -318,20 +320,20 @@ export default function BrowsePage() {
 
       <div className="container mx-auto px-2 sm:px-4 py-8">
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2">
             {Array.from({ length: 18 }).map((_, i) => (
               <div key={i} className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
             ))}
           </div>
         ) : filteredMedia.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-xl text-muted-foreground mb-2">Nenhum resultado encontrado</p>
-            <p className="text-sm text-muted-foreground">Tente ajustar os filtros ou buscar por outro termo</p>
+            <p className="text-xl text-muted-foreground mb-2">{t("noResults")}</p>
+            <p className="text-sm text-muted-foreground">{t("noResultsDescription")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-2 gap-4 sm:gap-2">
             {filteredMedia.map((item, index) => {
-              const isInWatchlist = watchlistIds.has(item.id)
+              const isInFavorites = favoritesIds.has(item.id)
               const year = item.release_date?.split("-")[0] || item.first_air_date?.split("-")[0]
 
               return (
@@ -344,8 +346,8 @@ export default function BrowsePage() {
                   voteAverage={item.vote_average}
                   overview={item.overview}
                   year={year}
-                  isInWatchlist={isInWatchlist}
-                  onToggleWatchlist={() => toggleWatchlist(item)}
+                  isInWatchlist={isInFavorites}
+                  onToggleWatchlist={() => toggleFavorites(item)}
                   index={index}
                   mediaType={activeTab === "movies" ? "movie" : "tv"}
                 />

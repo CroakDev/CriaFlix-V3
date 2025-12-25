@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @layer base {
   :root {
     --background: 0 0% 99.2157%;
@@ -55,7 +53,7 @@
     --shadow-md: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 2px 4px -1px hsl(0 0% 0% / 0.16);
     --shadow-lg: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 4px 6px -1px hsl(0 0% 0% / 0.16);
     --shadow-xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 8px 10px -1px hsl(0 0% 0% / 0.16);
-    --shadow-2xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.40);
+    --shadow-2xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.4);
     --tracking-normal: -0.025em;
     --spacing: 0.27rem;
   }
@@ -65,7 +63,7 @@
     --foreground: 0 0% 94.1176%;
     --card: 228 8.7719% 11.1765%;
     --card-foreground: 0 0% 94.1176%;
-    --popover: 228.0000 6.8493% 14.3137%;
+    --popover: 228.0 6.8493% 14.3137%;
     --popover-foreground: 0 0% 94.1176%;
     --primary: 258.2857 73.4266% 71.9608%;
     --primary-foreground: 0 0% 100%;
@@ -74,7 +72,7 @@
     --muted: 226.6667 9.6774% 18.2353%;
     --muted-foreground: 0 0% 62.7451%;
     --accent: 217.2414 32.5843% 17.4510%;
-    --accent-foreground: 208.2090 100.0000% 73.7255%;
+    --accent-foreground: 208.209 100.0000% 73.7255%;
     --destructive: 0 90.6040% 70.7843%;
     --destructive-foreground: 0 0% 100%;
     --border: 222.8571 6.4220% 21.3725%;
@@ -110,10 +108,9 @@
     --shadow-md: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 2px 4px -1px hsl(0 0% 0% / 0.16);
     --shadow-lg: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 4px 6px -1px hsl(0 0% 0% / 0.16);
     --shadow-xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 8px 10px -1px hsl(0 0% 0% / 0.16);
-    --shadow-2xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.40);
+    --shadow-2xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.4);
   }
 }
-
 
 @layer base {
   * {
@@ -122,9 +119,9 @@
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
 }
-
 
 /* width */
 ::-webkit-scrollbar {
@@ -160,6 +157,35 @@
 
   .media-card-content {
     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+
+  /* Added shimmer animation for skeleton loaders */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  /* Added pulse animation for ambient light */
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s ease-in-out infinite;
   }
 }
 

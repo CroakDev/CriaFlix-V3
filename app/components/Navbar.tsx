@@ -28,6 +28,7 @@ import Link from "next/link"
 import PremiumModal from "../components/PremiumModal"
 import { useTranslations } from "next-intl"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import logo from "@/assets/logon.png"
 
 interface SearchResult {
   id: number
@@ -161,25 +162,26 @@ export default function NavbarComponent() {
 
       <header className="sticky top-0 z-50 flex items-center justify-between w-full md:w-[calc(100%-12rem)] md:ml-auto text-sm py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="w-full px-4 flex items-center justify-between" aria-label="Global">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger className="mt-2">
-                  <Menu />
-                </SheetTrigger>
-                <SheetContent side={"left"} className="w-[300px] sm:w-[340px]">
-                  <SheetHeader>
-                    <SheetTitle className="text-left text-xl font-bold ml-3">CriaFlix</SheetTitle>
-                    <SheetDescription>
-                      <SidebarMenu />
-                    </SheetDescription>
-                  </SheetHeader>
-                </SheetContent>
-              </Sheet>
+              <Link href="/home" className="flex items-center mr-2">
+               <Image src={logo} alt="Criaflix" className="max-w-[186px]"/>
+              </Link>
             </div>
 
+
+            {/* Mobile search button */}
             <Button
-              className="text-[14px] text-zinc-400 bg-secondary hover:bg-muted pr-2 hover:opacity-80"
+              className="text-[14px] text-zinc-400 bg-secondary hover:bg-muted pr-2 pl-2 hover:opacity-80 flex md:hidden"
+              size="icon"
+              onClick={() => setOpen(true)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
+            {/* Search button - desktop */}
+            <Button
+              className="text-[14px] text-zinc-400 bg-secondary hover:bg-muted pr-2 hover:opacity-80 hidden md:flex"
               onClick={() => setOpen(true)}
             >
               <Search className="mr-2 h-4 w-4 text-xs" />
@@ -261,15 +263,7 @@ export default function NavbarComponent() {
 
             <LanguageSwitcher />
 
-            <div className="bg-zinc-600/20 p-2 rounded-lg">
-              <DarkModeSwitch
-                className="sm:block"
-                checked={theme?.theme === "dark"}
-                onChange={onDarkModeToggle}
-                size={20}
-              />
-            </div>
-
+           
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <a className="flex items-center space-x-2 font-medium cursor-pointer" aria-current="page">

@@ -14,7 +14,7 @@ function FavoritesLayout({ children, session }: { children: React.ReactNode; ses
         <NavbarComponent />
         <div className="flex flex-1 overflow-hidden">
           <SidebarMenu />
-          <main className="flex-1 w-full md:ml-48 p-4 pb-20 md:pb-4 overflow-auto">{children}</main>
+          <main className="flex-1 w-full md:ml-48 p-4 pb-20 md:pb-4 pt-16 overflow-auto">{children}</main>
         </div>
         <MobileBottomNav />
       </SessionProvider>

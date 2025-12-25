@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, Info, X, Loader2, Heart } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+import { Heart, Sparkles } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useSession } from "next-auth/react"
+import { useTranslations } from "next-intl"
+import MediaCard from "../components/Lists/MediaCard"
+import MediaCardSkeleton from "../components/Lists/MediaCardSkeleton"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface FavoriteItem {
   id: number
@@ -27,9 +27,11 @@ interface MediaDetails {
   title?: string
   name?: string
   poster_path: string | null
+  backdrop_path: string | null
   vote_average: number
   release_date?: string
   first_air_date?: string
+  overview: string
   media_type: string
 }
 
@@ -45,6 +47,7 @@ export default function FavoritesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
   const { data: session } = useSession()
+  const t = useTranslations("Favorites")
 
   useEffect(() => {
     if (session) {
@@ -92,7 +95,7 @@ export default function FavoritesPage() {
     } catch (error) {
       console.error("Error:", error)
       toast({
-        title: "Error",
+        title: t("error"),
         description: "Failed to load favorites",
         variant: "destructive",
       })
@@ -112,122 +115,129 @@ export default function FavoritesPage() {
       await fetchFavorites()
 
       toast({
-        title: "Removed from Favorites",
-        description: "Item removed successfully",
+        title: t("removedSuccess"),
+        description: t("removedDescription"),
       })
     } catch (error) {
       toast({
-        title: "Error",
+        title: t("error"),
         description: "Failed to remove from favorites",
         variant: "destructive",
       })
     }
   }
 
-  const filteredMedia = mediaDetails.filter((item) => activeTab === "all" || item.media_type === activeTab)
+  const filteredMedia = mediaDetails.filter((item) => {
+    if (activeTab === "all") return true
+    if (activeTab === "movies") return item.media_type === "movie"
+    if (activeTab === "series") return item.media_type === "tv"
+    return true
+  })
 
   const totalCount = favorites.movies.length + favorites.series.length
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 pb-20 md:pb-4 bg-background text-foreground">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Favorites</h1>
-        <Badge variant="secondary" className="text-sm sm:text-lg px-3 sm:px-4 py-1 sm:py-2">
-          {totalCount} {totalCount === 1 ? "item" : "items"}
-        </Badge>
+    <div className="min-h-screen bg-background pb-20 md:pb-4">
+      <div className="relative bg-gradient-to-b from-primary/10 via-background to-background pb-8 mb-8">
+        <div className="container mx-auto px-4 pt-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-4 mb-6"
+          >
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-red-500 to-pink-500 shadow-lg">
+              <Heart className="h-8 w-8 text-white fill-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                {t("title")}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {totalCount} {totalCount === 1 ? "item" : t("items")}
+              </p>
+            </div>
+          </motion.div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-3 h-11">
+              <TabsTrigger value="all" className="gap-2">
+                {t("all")}
+              </TabsTrigger>
+              <TabsTrigger value="movies" className="gap-2">
+                {t("movies")} <span className="text-xs opacity-70">({favorites.movies.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="series" className="gap-2">
+                {t("series")} <span className="text-xs opacity-70">({favorites.series.length})</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="movie">Movies ({favorites.movies.length})</TabsTrigger>
-          <TabsTrigger value="tv">Series ({favorites.series.length})</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="container mx-auto px-4">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-4 sm:gap-1">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <MediaCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredMedia.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-20 text-center"
+          >
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+              <div className="relative p-8 rounded-full bg-gradient-to-br from-primary/10 to-primary/5">
+                <Heart className="h-20 w-20 text-primary" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold mb-3">{t("empty")}</h2>
+            <p className="text-muted-foreground mb-8 max-w-md">{t("emptyDescription")}</p>
+            <Button size="lg" asChild className="gap-2">
+              <Link href="/browse">
+                <Sparkles className="h-5 w-5" />
+                Browse Content
+              </Link>
+            </Button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-1 gap-1 sm:gap-1">
+            <AnimatePresence mode="popLayout">
+              {filteredMedia.map((item, index) => {
+                const title = item.title || item.name || "Untitled"
+                const year = (item.release_date || item.first_air_date || "").split("-")[0]
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : filteredMedia.length === 0 ? (
-        <div className="text-center py-12">
-          <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-4">No favorites yet</h2>
-          <p className="text-muted-foreground mb-6">Start adding your favorite movies and series!</p>
-          <Button asChild>
-            <Link href="/browse">Browse Content</Link>
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          <AnimatePresence>
-            {filteredMedia.map((item) => {
-              const title = item.title || item.name || "Untitled"
-              const year = (item.release_date || item.first_air_date || "").split("-")[0]
-
-              return (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card className="overflow-hidden group relative">
-                    <div className="relative aspect-[2/3]">
-                      {item.poster_path ? (
-                        <Image
-                          src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                          alt={title}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-secondary flex items-center justify-center">
-                          <span className="text-muted-foreground">No Image</span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 p-4">
-                        <Button size="sm" variant="secondary" asChild>
-                          <Link href={`/media/${item.id}?mediaType=${item.media_type}`}>
-                            <Info className="h-4 w-4 mr-1" /> Details
-                          </Link>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => removeFromFavorites(item.id, item.media_type)}
-                        >
-                          <X className="h-4 w-4 mr-1" /> Remove
-                        </Button>
-                      </div>
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-8 w-8"
-                        onClick={() => removeFromFavorites(item.id, item.media_type)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <CardContent className="p-3">
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">{title}</h3>
-                      <div className="flex justify-between items-center text-xs text-muted-foreground">
-                        <span>{year}</span>
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 mr-1 text-yellow-400 fill-yellow-400" />
-                          {item.vote_average.toFixed(1)}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )
-            })}
-          </AnimatePresence>
-        </div>
-      )}
+                return (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MediaCard
+                      id={item.id}
+                      title={title}
+                      posterPath={item.poster_path}
+                      backdropPath={item.backdrop_path}
+                      voteAverage={item.vote_average}
+                      overview={item.overview}
+                      year={year}
+                      isInWatchlist={true}
+                      onToggleWatchlist={() => removeFromFavorites(item.id, item.media_type)}
+                      index={index}
+                      mediaType={item.media_type as "movie" | "tv"}
+                    />
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 {
   "HomePage": {
-    "title": "Hello world!",
-    "about": "Go to the about page",
+    "title": "Hello World!",
+    "about": "Go to about page",
     "welcome": "Welcome to",
     "subtitle": "Log in to access your favorite playlists and discover new content. Join us and enjoy a unique streaming experience."
   },
@@ -13,22 +13,19 @@
     "option3": "Favorites",
     "option4": "Playlists",
     "option5": "New Releases",
-    "option6": "Made for You",
-    "option7": "Community",
-    "option8": "Watch Later",
     "upgrade": "Upgrade your plan for more features!",
     "buttonupgrade": "Upgrade Now",
-    "vipMember": "You are a VIP member! Enjoy your exclusive perks!"
+    "vipMember": "You are a VIP member! Enjoy your exclusive benefits!"
   },
   "NavBar": {
-    "btnPremium": "Buy Premium",
+    "btnPremium": "Get Premium",
     "inputsearch": "What are you looking for?",
-    "btnlogout": "Logout",
+    "btnlogout": "Sign Out",
     "profile": "Profile & Settings"
   },
   "FeaturedMidia": {
     "btwath": "Watch Now",
-    "btaddwl": "Add to Watchlist",
+    "btaddwl": "Add to List",
     "btadded": "Added"
   },
   "Playlists": {
@@ -43,6 +40,8 @@
     "item": "item",
     "view": "View",
     "delete": "Delete",
+    "public": "Public",
+    "private": "Private",
     "titleLabel": "Title",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Optional description...",
@@ -83,21 +82,11 @@
     "removedSuccess": "Removed from Favorites",
     "removedDescription": "Item removed successfully"
   },
-  "WatchLater": {
-    "title": "Watch Later",
-    "empty": "Your watch later list is empty",
-    "emptyDescription": "Add movies and series you want to watch later!",
-    "all": "All",
-    "movies": "Movies",
-    "series": "Series",
-    "removedSuccess": "Removed from Watch Later",
-    "removedDescription": "Item removed successfully"
-  },
   "Browse": {
     "title": "Browse",
     "searchPlaceholder": "Search...",
     "movies": "Movies",
-    "series": "TV Series",
+    "series": "Series",
     "allGenres": "All genres",
     "allYears": "All years",
     "sortBy": "Sort by",
@@ -106,37 +95,22 @@
     "release": "Release",
     "clearFilters": "Clear filters",
     "noResults": "No results found",
-    "noResultsDescription": "Try adjusting the filters or searching for another term",
+    "noResultsDescription": "Try adjusting filters or searching for another term",
     "loginRequired": "Login required",
-    "loginDescription": "Please login to add to your list",
+    "loginDescription": "Log in to add to your list",
     "added": "Added",
     "addedDescription": "was added to your list",
     "removed": "Removed",
     "removedDescription": "was removed from your list",
     "error": "Error",
-    "errorDescription": "Could not update the list"
+    "errorDescription": "Unable to update the list"
   },
   "NewReleases": {
     "title": "New Releases",
     "subtitle": "Latest movies and series from the last 30 days",
     "movies": "Movies",
-    "series": "TV Series",
+    "series": "Series",
     "noResults": "No new releases found"
-  },
-  "Community": {
-    "title": "Community",
-    "subtitle": "Discover public playlists from other users",
-    "empty": "No public playlists yet",
-    "emptyDescription": "Be the first to share a playlist with the community!",
-    "createPublic": "Create Public Playlist",
-    "viewPlaylist": "View Playlist"
-  },
-  "MadeForYou": {
-    "title": "Made For You",
-    "subtitlePersonalized": "Personalized recommendations based on your favorites and watchlist",
-    "subtitleTrending": "Trending content to get you started",
-    "noHistory": "Start adding content to your favorites or watchlist to get personalized recommendations!",
-    "noResults": "No recommendations available"
   },
   "Common": {
     "loading": "Loading...",
@@ -151,6 +125,13 @@
     "filter": "Filter",
     "year": "Year",
     "details": "Details",
-    "noImage": "No Image"
+    "noImage": "No Image",
+    "watch": "Watch",
+    "addFavorites": "Add to Favorites",
+    "removeFavorites": "Remove from Favorites",
+    "addToPlaylist": "Add to Playlist",
+    "watchTrailer": "Watch Full Trailer",
+    "mute": "Mute",
+    "unmute": "Unmute"
   }
 }

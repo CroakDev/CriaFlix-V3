@@ -13,9 +13,6 @@
     "option3": "Favoritos",
     "option4": "Playlists",
     "option5": "Lançamentos",
-    "option6": "Feito para Você",
-    "option7": "Comunidade",
-    "option8": "Ver Depois",
     "upgrade": "Atualize seu plano para mais recursos!",
     "buttonupgrade": "Atualizar Agora",
     "vipMember": "Você é um membro VIP! Aproveite seus benefícios exclusivos!"
@@ -43,6 +40,8 @@
     "item": "item",
     "view": "Ver",
     "delete": "Excluir",
+    "public": "Pública",
+    "private": "Privada",
     "titleLabel": "Título",
     "descriptionLabel": "Descrição",
     "descriptionPlaceholder": "Descrição opcional...",
@@ -83,16 +82,6 @@
     "removedSuccess": "Removido dos Favoritos",
     "removedDescription": "Item removido com sucesso"
   },
-  "WatchLater": {
-    "title": "Ver Depois",
-    "empty": "Sua lista de ver depois está vazia",
-    "emptyDescription": "Adicione filmes e séries que você quer assistir depois!",
-    "all": "Todos",
-    "movies": "Filmes",
-    "series": "Séries",
-    "removedSuccess": "Removido de Ver Depois",
-    "removedDescription": "Item removido com sucesso"
-  },
   "Browse": {
     "title": "Navegar",
     "searchPlaceholder": "Buscar...",
@@ -123,21 +112,6 @@
     "series": "Séries",
     "noResults": "Nenhum lançamento encontrado"
   },
-  "Community": {
-    "title": "Comunidade",
-    "subtitle": "Descubra playlists públicas de outros usuários",
-    "empty": "Ainda não há playlists públicas",
-    "emptyDescription": "Seja o primeiro a compartilhar uma playlist com a comunidade!",
-    "createPublic": "Criar Playlist Pública",
-    "viewPlaylist": "Ver Playlist"
-  },
-  "MadeForYou": {
-    "title": "Feito para Você",
-    "subtitlePersonalized": "Recomendações personalizadas baseadas em seus favoritos e lista",
-    "subtitleTrending": "Conteúdo em alta para você começar",
-    "noHistory": "Comece a adicionar conteúdo aos seus favoritos ou lista para receber recomendações personalizadas!",
-    "noResults": "Nenhuma recomendação disponível"
-  },
   "Common": {
     "loading": "Carregando...",
     "save": "Salvar",
@@ -151,6 +125,13 @@
     "filter": "Filtrar",
     "year": "Ano",
     "details": "Detalhes",
-    "noImage": "Sem Imagem"
+    "noImage": "Sem Imagem",
+    "watch": "Assistir",
+    "addFavorites": "Adicionar aos Favoritos",
+    "removeFavorites": "Remover dos Favoritos",
+    "addToPlaylist": "Adicionar à Playlist",
+    "watchTrailer": "Ver Trailer Completo",
+    "mute": "Silenciar",
+    "unmute": "Ativar Som"
   }
 }

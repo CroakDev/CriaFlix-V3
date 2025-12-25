@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Loader2, ListVideo, Lock, Globe, Trash2, Edit, Play, MoreVertical } from "lucide-react"
+import { Plus, Loader2, ListVideo, Lock, Globe, Trash2, Edit, Play, MoreVertical, ImageIcon } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/components/ui/use-toast"
 import { useSession } from "next-auth/react"
@@ -32,11 +32,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
+import Image from "next/image"
 
 interface Playlist {
   id: number
   title: string
   description: string | null
+  coverImage: string | null
   isPublic: boolean
   createdAt: string
   updatedAt: string
@@ -54,10 +57,12 @@ export default function ImprovedPlaylistsPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    coverImage: "",
     isPublic: false,
   })
   const { toast } = useToast()
   const { data: session } = useSession()
+  const t = useTranslations("Playlists")
 
   useEffect(() => {
     if (session) {
@@ -108,7 +113,7 @@ export default function ImprovedPlaylistsPage() {
 
       await fetchPlaylists()
       setCreateDialogOpen(false)
-      setFormData({ title: "", description: "", isPublic: false })
+      setFormData({ title: "", description: "", coverImage: "", isPublic: false })
 
       toast({
         title: "Sucesso",
@@ -139,7 +144,7 @@ export default function ImprovedPlaylistsPage() {
 
       await fetchPlaylists()
       setEditingPlaylist(null)
-      setFormData({ title: "", description: "", isPublic: false })
+      setFormData({ title: "", description: "", coverImage: "", isPublic: false })
 
       toast({
         title: "Sucesso",
@@ -185,6 +190,7 @@ export default function ImprovedPlaylistsPage() {
     setFormData({
       title: playlist.title,
       description: playlist.description || "",
+      coverImage: playlist.coverImage || "",
       isPublic: playlist.isPublic,
     })
   }
@@ -198,34 +204,49 @@ export default function ImprovedPlaylistsPage() {
         transition={{ duration: 0.3 }}
       >
         <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-primary/10 hover:border-primary/30">
-          <div className="relative h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <ListVideo className="h-16 w-16 text-primary/40" />
-            <div className="absolute top-2 right-2">
+          <div className="relative h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+            {playlist.coverImage ? (
+              <Image
+                src={playlist.coverImage || "/placeholder.svg"}
+                alt={playlist.title}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <ListVideo className="h-16 w-16 text-primary/40" />
+            )}
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+            <div className="absolute top-2 right-2 z-10">
               {playlist.isPublic ? (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                <Badge className="bg-green-500/90 text-white border-green-500/30 backdrop-blur-sm">
                   <Globe className="h-3 w-3 mr-1" />
-                  Pública
+                  {t("public")}
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="bg-gray-500/20 text-gray-400">
+                <Badge variant="secondary" className="bg-gray-500/90 text-white backdrop-blur-sm">
                   <Lock className="h-3 w-3 mr-1" />
-                  Privada
+                  {t("private")}
                 </Badge>
               )}
             </div>
 
-            {/* Dropdown Menu */}
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 z-10">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/20 hover:bg-black/40">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white"
+                  >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <DropdownMenuItem onClick={() => openEditDialog(playlist)}>
                     <Edit className="h-4 w-4 mr-2" />
-                    Editar
+                    {t("edit")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -233,7 +254,7 @@ export default function ImprovedPlaylistsPage() {
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir
+                    {t("delete")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -253,17 +274,20 @@ export default function ImprovedPlaylistsPage() {
 
               <div className="flex items-center justify-between">
                 <Badge variant="outline" className="text-xs">
-                  {playlist._count.items} {playlist._count.items === 1 ? "item" : "itens"}
+                  {playlist._count.items} {playlist._count.items === 1 ? t("item") : t("items")}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(playlist.updatedAt).toLocaleDateString("pt-BR")}
+                  {new Date(playlist.updatedAt).toLocaleDateString()}
                 </span>
               </div>
 
               <Link href={`/playlists/${playlist.id}`}>
-                <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" size="sm">
+                <Button
+                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                  size="sm"
+                >
                   <Play className="h-4 w-4 mr-2" />
-                  Ver Playlist
+                  {t("view")}
                 </Button>
               </Link>
             </div>
@@ -275,50 +299,63 @@ export default function ImprovedPlaylistsPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 pb-20 md:pb-4 bg-background min-h-screen">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Minhas Playlists
+            {t("title")}
           </h1>
-          <p className="text-muted-foreground mt-2">Organize seus filmes e séries favoritos</p>
+          <p className="text-muted-foreground mt-2">{t("subtitle")}</p>
         </div>
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-5 w-5" />
-              <span className="hidden sm:inline">Nova Playlist</span>
+              <span className="hidden sm:inline">{t("create")}</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Criar Nova Playlist</DialogTitle>
+              <DialogTitle>{t("createNew")}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreatePlaylist} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Título *</Label>
+                <Label htmlFor="title">{t("titleLabel")} *</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Minha Playlist Incrível"
+                  placeholder={t("titleLabel")}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="description">{t("descriptionLabel")}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição opcional..."
+                  placeholder={t("descriptionPlaceholder")}
                   rows={3}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="coverImage" className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Cover Image URL
+                </Label>
+                <Input
+                  id="coverImage"
+                  value={formData.coverImage}
+                  onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                  type="url"
+                />
+                <p className="text-xs text-muted-foreground">Paste an image URL from TMDB or any public image</p>
+              </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="isPublic" className="cursor-pointer">
-                  Tornar Pública
+                  {t("makePublic")}
                 </Label>
                 <Switch
                   id="isPublic"
@@ -327,14 +364,13 @@ export default function ImprovedPlaylistsPage() {
                 />
               </div>
               <Button type="submit" className="w-full">
-                Criar Playlist
+                {t("createButton")}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -344,13 +380,11 @@ export default function ImprovedPlaylistsPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
             <ListVideo className="h-10 w-10 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Nenhuma playlist ainda</h2>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Crie sua primeira playlist para organizar seu conteúdo favorito
-          </p>
+          <h2 className="text-2xl font-bold mb-2">{t("empty")}</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">{t("emptyDescription")}</p>
           <Button onClick={() => setCreateDialogOpen(true)} size="lg">
             <Plus className="h-5 w-5 mr-2" />
-            Criar Playlist
+            {t("create")}
           </Button>
         </div>
       ) : (
@@ -361,36 +395,53 @@ export default function ImprovedPlaylistsPage() {
         </div>
       )}
 
-      {/* Edit Dialog */}
       <Dialog open={!!editingPlaylist} onOpenChange={(open) => !open && setEditingPlaylist(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Playlist</DialogTitle>
+            <DialogTitle>{t("edit")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditPlaylist} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-title">Título *</Label>
+              <Label htmlFor="edit-title">{t("titleLabel")} *</Label>
               <Input
                 id="edit-title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Minha Playlist Incrível"
+                placeholder={t("titleLabel")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Descrição</Label>
+              <Label htmlFor="edit-description">{t("descriptionLabel")}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descrição opcional..."
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-coverImage" className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Cover Image URL
+              </Label>
+              <Input
+                id="edit-coverImage"
+                value={formData.coverImage}
+                onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+                type="url"
+              />
+              {formData.coverImage && (
+                <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
+                  <Image src={formData.coverImage || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                </div>
+              )}
+            </div>
             <div className="flex items-center justify-between py-2">
               <Label htmlFor="edit-isPublic" className="cursor-pointer">
-                Tornar Pública
+                {t("makePublic")}
               </Label>
               <Switch
                 id="edit-isPublic"
@@ -399,25 +450,22 @@ export default function ImprovedPlaylistsPage() {
               />
             </div>
             <Button type="submit" className="w-full">
-              Atualizar Playlist
+              {t("updateButton")}
             </Button>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletePlaylistId} onOpenChange={(open) => !open && setDeletePlaylistId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente a playlist e todos os seus itens.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeletePlaylist} className="bg-destructive text-destructive-foreground">
-              Excluir
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

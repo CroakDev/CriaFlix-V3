@@ -18,7 +18,7 @@ function HomePageClient() {
 
   useEffect(() => {
     const checkUserSetup = async () => {
-      if (status === "loading") return // Aguarda o carregamento da sessão
+      if (status === "loading") return
 
       if (status === "authenticated") {
         if (!session?.user?.email) {
@@ -44,7 +44,7 @@ function HomePageClient() {
           console.error("Error checking user setup:", error)
         }
       } else {
-        router.push("/") // Redireciona para a página de login se o usuário não estiver autenticado
+        router.push("/")
       }
     }
 
@@ -52,12 +52,10 @@ function HomePageClient() {
   }, [session, status, router])
 
   return (
-    <>
+    <div >
       <FeaturedBanner />
-      <div>
-        <MediaList2 />
-      </div>
-    </>
+      <MediaList2 />
+    </div>
   )
 }
 

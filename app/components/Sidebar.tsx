@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon, Home, HeartHandshake, Flame, Play, Compass, User, Heart, Clock } from "lucide-react"
+import { ChevronDownIcon, Home, Flame, Play, Compass, Heart } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import Logo from "@/assets/logo.svg"
+import Logo from "@/assets/logon.png"
 import * as React from "react"
 import { useSession } from "next-auth/react"
 import { useTranslations } from "next-intl"
@@ -75,16 +75,10 @@ export function SidebarMenu() {
       href: "/browse",
     },
     {
-      label: side("tag1"),
+      label: side("tag2"),
       name: "Favorites",
       icon: <Heart size={15} className="mr-2" />,
       href: "/favorites",
-    },
-    {
-      label: side("tag1"),
-      name: "Watch Later",
-      icon: <Clock size={15} className="mr-2" />,
-      href: "/watch-later",
     },
     {
       label: side("tag2"),
@@ -98,18 +92,6 @@ export function SidebarMenu() {
       icon: <Flame size={15} className="mr-2" />,
       href: "/home/releases",
     },
-    {
-      label: side("tag2"),
-      name: side("option6"),
-      icon: <User size={15} className="mr-2" />,
-      href: "/home/made-for-you",
-    },
-    {
-      label: side("tag2"),
-      name: side("option7"),
-      icon: <HeartHandshake size={15} className="mr-2" />,
-      href: "/home/community",
-    },
   ]
 
   const uniqueLabels = Array.from(new Set(menus.map((menu) => menu.label)))
@@ -119,10 +101,10 @@ export function SidebarMenu() {
       <ScrollArea className="h-full">
         <Link href="/">
           <div className="flex justify-center items-center py-6 mt-5">
-            <Image className="w-9 h-9" src={Logo || "/placeholder.svg"} alt="Logo" />
-            <h1 className="text-2xl font-bold ml-1 flex items-center">
-              Cria <b className="text-primary font-bold">Flix</b>
-            </h1>
+         
+            <div className="text-2xl font-bold ml-1 flex items-center">
+              <Image src={Logo || "/placeholder.svg"} alt="Logo" style={{maxWidth: '160px'}} />
+            </div>
           </div>
         </Link>
         <div className="md:px-4 sm:p-0 mt-5">

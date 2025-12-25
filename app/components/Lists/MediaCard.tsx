@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Play, Plus, Check, Info, ListPlus } from "lucide-react"
+import { Play, Plus, Check, ListPlus, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import AddToPlaylistDialog from "@/app/components/AddToPlaylistDialog"
-import Link from "next/link"
+import { NetflixModal } from "@/app/components/NetflixModal"
+import Image from "next/image"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useTranslations } from "next-intl"
 
 interface MediaCardProps {
   id: number
@@ -36,125 +38,147 @@ export default function MediaCard({
 }: MediaCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false)
+  const [showNetflixModal, setShowNetflixModal] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const t = useTranslations("Common")
 
   return (
-    <>
+    <TooltipProvider>
       <div
-        className="relative aspect-video rounded-lg overflow-visible cursor-pointer animate-in fade-in-0 zoom-in-95"
+        className="group w-full flex flex-col gap-3 cursor-pointer animate-in fade-in-0 zoom-in-95"
         style={{ animationDelay: `${index * 30}ms`, animationFillMode: "backwards" }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setShowNetflixModal(true)}
       >
-        {/* Card Original - Sempre visível */}
-        <div className="relative w-full h-full rounded-lg overflow-hidden bg-muted">
-          {backdropPath || posterPath ? (
-            <img
-              src={`https://image.tmdb.org/t/p/w500${backdropPath || posterPath}`}
-              alt={title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              <span className="text-xs text-center px-2">Sem imagem</span>
-            </div>
-          )}
-        </div>
-
-        {/* Hover Overlay - Card Expandido */}
-        {isHovered && (
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[280px] bg-black rounded-lg shadow-2xl z-50 animate-in fade-in-0 duration-300"
-            style={{ minHeight: "420px" }}
-          >
-            <div className="relative w-full h-[160px] rounded-t-lg overflow-hidden">
-              {backdropPath || posterPath ? (
-                <img
+        {/* Thumbnail Container */}
+        <div className="block">
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
+            {/* Image or placeholder */}
+            {backdropPath || posterPath ? (
+              <>
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted-foreground/10 to-muted animate-shimmer" />
+                )}
+                <Image
                   src={`https://image.tmdb.org/t/p/w500${backdropPath || posterPath}`}
                   alt={title}
-                  className="w-full h-full object-cover animate-in zoom-in-110 duration-500"
+                  fill
+                  className={`object-cover transition-all duration-300 ${
+                    isHovered ? "scale-105" : "scale-100"
+                  } ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                  onLoad={() => setImageLoaded(true)}
+                  loading="lazy"
                 />
-              ) : (
-                <div className="w-full h-full bg-muted" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-              {/* Logo CriaFlix no canto */}
-              <div className="absolute top-2 right-2 bg-white/90 px-3 py-1 rounded text-xs font-bold text-black">
-                CriaFlix
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <span className="text-sm">No Image</span>
               </div>
-            </div>
+            )}
 
-            {/* Content */}
-            <div className="p-4 space-y-3">
-              {/* Title */}
-              <h3 className="font-bold text-base text-white line-clamp-2">{title}</h3>
+            {isHovered && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 animate-in fade-in-0 duration-200">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-white text-black hover:bg-white/90 shadow-lg"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowNetflixModal(true)
+                      }}
+                    >
+                      <Play className="w-5 h-5 fill-current" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t("details")}</p>
+                  </TooltipContent>
+                </Tooltip>
 
-              {/* Badge Incluso */}
-              <div className="flex items-center gap-1 text-xs text-blue-400">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Incluso com assinatura CriaFlix</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10 rounded-full border-2 border-white text-white hover:bg-white/20 bg-black/50"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onToggleWatchlist()
+                      }}
+                    >
+                      {isInWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isInWatchlist ? t("removeFavorites") : t("addFavorites")}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10 rounded-full border-2 border-white text-white hover:bg-white/20 bg-black/50"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setShowPlaylistDialog(true)
+                      }}
+                    >
+                      <ListPlus className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t("addToPlaylist")}</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
+            )}
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <Link href={`/media/${id}?mediaType=${mediaType}`} className="flex-1">
-                  <Button size="sm" className="w-full bg-white text-black hover:bg-white/90 font-semibold h-9">
-                    <Play className="w-4 h-4 mr-1 fill-current" />
-                    Reproduzir
-                  </Button>
-                </Link>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="shrink-0 h-9 w-9 rounded-full border border-white/30 text-white hover:bg-white/20 bg-black/50"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowPlaylistDialog(true)
-                  }}
-                  title="Adicionar à Playlist"
-                >
-                  <ListPlus className="w-4 h-4" />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="shrink-0 h-9 w-9 rounded-full border border-white/30 text-white hover:bg-white/20 bg-black/50"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleWatchlist()
-                  }}
-                  title={isInWatchlist ? "Remover da Lista" : "Adicionar à Lista"}
-                >
-                  {isInWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                </Button>
+            {/* Rating badge */}
+            {voteAverage > 0 && (
+              <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1">
+                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                <span className="text-xs font-semibold text-white">{voteAverage.toFixed(1)}</span>
               </div>
-
-              {/* Info: Year, Rating */}
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Badge variant="destructive" className="text-xs h-5">
-                  16
-                </Badge>
-                {year && <span>{year}</span>}
-                <span className="flex items-center gap-1">
-                  ⭐ {voteAverage.toFixed(1)}
-                </span>
-              </div>
-
-              {/* Overview */}
-              {overview && <p className="text-xs text-gray-300 line-clamp-3 leading-relaxed">{overview}</p>}
-            </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Content below thumbnail */}
+        <div className="space-y-1 px-1">
+          {/* Title */}
+          <div onClick={() => setShowNetflixModal(true)}>
+            <h3 className="font-semibold text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+              {title}
+            </h3>
+          </div>
+
+          {/* Meta info */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {year && <span>{year}</span>}
+            {year && voteAverage > 0 && <span>•</span>}
+            {voteAverage > 0 && (
+              <span className="flex items-center gap-1">
+                <Star className="w-3 h-3 fill-current" />
+                {voteAverage.toFixed(1)}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Netflix Modal */}
+      <NetflixModal
+        mediaId={id}
+        mediaType={mediaType}
+        isOpen={showNetflixModal}
+        onClose={() => setShowNetflixModal(false)}
+      />
 
       {/* Playlist Dialog */}
       <AddToPlaylistDialog
@@ -165,6 +189,6 @@ export default function MediaCard({
         mediaTitle={title}
         posterPath={posterPath}
       />
-    </>
+    </TooltipProvider>
   )
 }

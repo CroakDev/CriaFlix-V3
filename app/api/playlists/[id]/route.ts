@@ -69,7 +69,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const playlistId = Number.parseInt(params.id)
     const body = await request.json()
-    const { title, description, isPublic } = body
+    const { title, description, coverImage, isPublic } = body
 
     // Check ownership
     const playlist = await prisma.playlist.findUnique({
@@ -85,6 +85,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       data: {
         title: title?.trim() || playlist.title,
         description: description !== undefined ? description?.trim() || null : playlist.description,
+        coverImage: coverImage !== undefined ? coverImage?.trim() || null : playlist.coverImage,
         isPublic: isPublic !== undefined ? isPublic : playlist.isPublic,
       },
       include: {

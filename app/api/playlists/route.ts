@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, description, isPublic } = body
+    const { title, description, isPublic, coverImage } = body
 
     if (!title || title.trim() === "") {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
@@ -96,6 +96,7 @@ export async function POST(request: Request) {
         title: title.trim(),
         description: description?.trim() || null,
         isPublic: isPublic || false,
+        coverImage: coverImage || null,
         userId: user.id,
       },
       include: {
